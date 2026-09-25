@@ -1,0 +1,21 @@
+{
+  "name": "pdf-reader",
+  "version": "0.1.0",
+  "private": true,
+  "description": "MCP server — reads a PDF file and returns its text content.",
+  "type": "module",
+  "main": "build/index.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsc -p tsconfig.json --watch"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "latest",
+    "pdf-parse": "^2.4.5"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/pdf-parse": "^1.1.4",
+    "typescript": "^5.6.0"
+  }
+}
