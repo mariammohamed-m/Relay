@@ -1,0 +1,32 @@
+{
+  "name": "bob-relay",
+  "version": "0.3.0",
+  "description": "Relay CLI - scaffolds and manages the .relay/ baton that carries context between dev-workflow stages.",
+  "type": "module",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "bin": {
+    "relay": "./dist/index.js"
+  },
+  "files": [
+    "dist",
+    "templates",
+    "dashboard-dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsc -p tsconfig.json --watch",
+    "test": "tsc -p tsconfig.json && node --test dist/*.test.js",
+    "prepublishOnly": "npm run build && node scripts/check-dashboard-dist.mjs"
+  },
+  "dependencies": {
+    "commander": "^15.0.0",
+    "yaml": "^2.9.1"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.2",
+    "typescript": "^5.6.0"
+  }
+}
