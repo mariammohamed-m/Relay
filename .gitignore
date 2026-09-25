@@ -1,0 +1,24 @@
+# Node
+node_modules/
+npm-debug.log*
+.npm
+
+# Build output
+dist/
+build/
+
+# Editor
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.swp
+.DS_Store
+.claude/
+CLAUDE.md
+
+# Env
+.env
+.env.local
+
+# NOTE: .relay/ and .bob/ are intentionally NOT ignored - they are the product.
+node_modules
