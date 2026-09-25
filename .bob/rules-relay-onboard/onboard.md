@@ -10,7 +10,10 @@ and surface one good first task.
 **Steps:**
 
 1. `npx relay stage start onboard`.
-2. Read the knowledge base in full.
+2. Read `gotchas.md`, `decisions.md`, and `glossary.md` in full (small,
+   append-only files). For `architecture.md`, read it in full while it's
+   small; once it grows large, skim it for the subsystem you're about to
+   touch instead of re-reading the whole thing every time.
 3. Explore the target codebase by subsystem. If subagent spawning is
    available in this mode, spawn one `explore` subagent per top-level
    subsystem; each returns a short section (what it does, key files,
@@ -40,7 +43,7 @@ without finishing, run `npx relay stage cancel onboard`.
 
 **Done checklist:**
 
-- [ ] Knowledge base read in full
+- [ ] Knowledge base read (full for gotchas/decisions/glossary; architecture.md skimmed if large)
 - [ ] `architecture.md` updated, references existing gotcha ids
 - [ ] No existing gotcha entry rewritten
 - [ ] `00-onboard.md` written in the task directory (not only in chat)

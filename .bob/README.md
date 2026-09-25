@@ -53,7 +53,9 @@ not a file this config writes for you.
 ## Pre-run checklist (also in `docs/bob-runbook.md`)
 
 1. Hackathon Bob account selected in Bob settings (not your personal one).
-2. `npx relay task new "<title>"` run for the task.
+2. `npx relay start "<title>" --no-dashboard` run for the task - `--no-dashboard`
+   because step 4's dev dashboard already covers it; without the flag `start`
+   also launches the packaged static dashboard build on its own port.
 3. `.relay/.active` points at that task.
 4. Dashboard running (`npm run dev:dashboard`) - it builds the CLI and
    starts `relay compile --watch` automatically, no second terminal needed.

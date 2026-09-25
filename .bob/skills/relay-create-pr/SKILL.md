@@ -5,7 +5,7 @@ description: >-
   instead of Bob's diff-generated description.
 metadata:
   user-invocable: true
-  disable-model-invocation: true
+  disable-model-invocation: false
 ---
 
 Bob's built-in `/create-pull-request` generates its description from the

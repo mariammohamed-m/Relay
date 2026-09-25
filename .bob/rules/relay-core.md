@@ -12,7 +12,7 @@
 - Never mark something done, covered, or fixed that wasn't. An honest
   "uncovered" or "pending" is correct output.
 - Never overwrite another stage's artifact file. Each stage owns exactly one
-  file (see the stage → artifact table in `AGENTS.md` / `CLAUDE.md`).
+  file (see the stage → artifact table in `AGENTS.md`).
 - Keep every artifact concise and factual - decisions and reasoning, not
   narration of what you did.
 - Every stage: run `npx relay stage start <stage>` before starting work and

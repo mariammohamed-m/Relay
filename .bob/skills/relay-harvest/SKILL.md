@@ -1,6 +1,12 @@
 ---
 name: relay-harvest
-description: The exact gotchas.md entry format the compile.ts parser expects. Use during the Relay debug stage whenever writing a new entry to .relay/knowledge/gotchas.md - a heading or field off this format silently fails to compile.
+description: >-
+  The exact gotchas.md entry format the compile.ts parser expects. Use during
+  the Relay debug stage whenever writing a new entry to
+  .relay/knowledge/gotchas.md - a heading or field off this format silently
+  fails to compile.
+metadata:
+  disable-model-invocation: false
 ---
 
 # Gotcha entry format
