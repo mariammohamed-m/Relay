@@ -63,6 +63,10 @@ program
   .option("--port <port>", "dashboard port (default 4317)")
   .option("--no-dashboard", "don't compile or launch the dashboard")
   .option("--no-open", "don't auto-open a browser tab for the dashboard")
+  .option(
+    "--force",
+    "re-scaffold .bob/.relay even if they already exist (never touches real tasks/knowledge)",
+  )
   .action((title, opts) =>
     run(() =>
       cmdStart(title, {
@@ -73,6 +77,7 @@ program
         port: opts.port,
         dashboard: opts.dashboard,
         open: opts.open,
+        force: Boolean(opts.force),
       }),
     ),
   );

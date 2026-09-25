@@ -214,19 +214,22 @@ export interface StartOptions extends TaskNewOptions {
   dashboard?: boolean;
   port?: string;
   open?: boolean;
+  force?: boolean;
 }
 
 /**
  * Quickstart: init if needed, create+activate a task, compile, and serve the
  * dashboard - everything short of opening Bob itself. After this returns,
  * the only thing left for the developer to do is switch Bob to onboarding.
+ * `--force` re-scaffolds .bob/.relay even if they already exist (e.g. after
+ * a previous partial/failed run left .bob/ without .relay/).
  */
 export async function cmdStart(
   title: string,
   opts: StartOptions,
 ): Promise<void> {
-  if (!existsSync(relayRoot())) {
-    await cmdInit({}, /* quiet */ true);
+  if (opts.force || !existsSync(relayRoot())) {
+    await cmdInit({ force: opts.force }, /* quiet */ true);
   }
   await cmdTaskNew(title, opts);
   await cmdCompile({});
