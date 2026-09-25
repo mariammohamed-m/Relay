@@ -1,0 +1,210 @@
+{
+  "id": "T-000",
+  "slug": "mariam",
+  "title": "mariam",
+  "source": {
+    "type": "adhoc",
+    "ref": ""
+  },
+  "createdAt": "2026-09-25T13:50:51.645Z",
+  "updatedAt": "2026-09-25T19:18:18.274Z",
+  "tags": [],
+  "mode": "relay",
+  "currentStage": "implement",
+  "stages": {
+    "onboard": {
+      "status": "done",
+      "artifact": "00-onboard.md",
+      "startedAt": "2026-09-25T13:55:56.152Z",
+      "completedAt": "2026-09-25T13:59:28.789Z",
+      "durationSec": 213,
+      "failure": null,
+      "visitCount": 1,
+      "history": [],
+      "staleSince": null
+    },
+    "brief": {
+      "status": "done",
+      "artifact": "01-brief.md",
+      "startedAt": "2026-09-25T14:27:29.154Z",
+      "completedAt": "2026-09-25T14:28:35.427Z",
+      "durationSec": 66,
+      "failure": null,
+      "visitCount": 1,
+      "history": [],
+      "staleSince": null
+    },
+    "plan": {
+      "status": "done",
+      "artifact": "02-plan.md",
+      "startedAt": "2026-09-25T14:40:17.279Z",
+      "completedAt": "2026-09-25T14:41:20.395Z",
+      "durationSec": 63,
+      "failure": null,
+      "visitCount": 1,
+      "history": [],
+      "staleSince": null
+    },
+    "implement": {
+      "status": "done",
+      "artifact": "03-implementation.md",
+      "startedAt": "2026-09-25T19:18:17.387Z",
+      "completedAt": "2026-09-25T19:18:18.268Z",
+      "durationSec": 1,
+      "failure": null,
+      "visitCount": 2,
+      "history": [
+        {
+          "visitNumber": 1,
+          "startedAt": "2026-09-25T14:45:27.885Z",
+          "completedAt": "2026-09-25T14:49:22.058Z",
+          "durationSec": 234,
+          "artifactSnapshot": "# 03-implementation.md — T-000 mariam\r\n\r\n## What was built\r\n\r\nAll five plan steps implemented, all 22 tests passing.\r\n\r\n### Step 1 — Fix `getPurchaseAgeDays()` timezone bug\r\n`src/refunds/validators.ts`: replaced `new Date(getRequestNow()).getTime()` with `Date.now()`.\r\nRemoved the now-unused `getRequestNow` import. This fixes the UTC+N host drift documented in the boundary spec.\r\n\r\n### Step 2 — 30-day hard refund cutoff (AC-1, AC-2)\r\n`src/refunds/validators.ts`: added `REFUND_WINDOW_DAYS = 30` constant. Added early-return branch in `isEligibleForRefund()`: if `ageDays > REFUND_WINDOW_DAYS`, returns `{ eligible: false, needsManualReview: false, reason: 'REFUND_WINDOW_EXPIRED' }`. The existing `MANUAL_REVIEW_AGE_DAYS = 90` branch is preserved for the manual-review path (unreachable under normal flow now, but not removed in case the window constant changes in future).\r\n\r\n`src/refunds/refundService.ts`: `requestRefund()` now propagates `eligibility.reason === 'REFUND_WINDOW_EXPIRED'` to `refund.reasonCode` instead of the generic `'NOT_ELIGIBLE'`.\r\n\r\n### Step 3 — Admin override + audit log (AC-3, AC-5)\r\n`src/lib/db.ts`: added exported `AuditEvent` interface (`type`, `refundId`, `adminUserId`, `at`) and `auditLog: AuditEvent[]` array to the `Store` shape. `emptyStore()` initialises it to `[]`, so `resetDb()` clears it automatically.\r\n\r\n`src/refunds/refundService.ts`: new exported `overrideRefund(refundId, adminUser)` function. Loads the refund, checks `canOverrideRefund()` (throws `ValidationError` on failure), sets `status='approved'`, `reasonCode='ADMIN_OVERRIDE'`, `decidedAt`, `overriddenByUserId`, marks the booking `status='refunded'`, and appends an audit event.\r\n\r\n### Step 4 — Flight-change fee (AC-6, AC-7, AC-8)\r\n`src/bookings/bookingService.ts`: added `CHANGE_FEE_CENTS = { economy: 5000, business: 15000 }` constant and `changeBooking(bookingId, newFlightId, requestedAt?)` function. Uses `Date.now()` (or caller-supplied `requestedAt` for deterministic testing) exclusively — `getRequestNow()` never touched. Fee applied when `daysUntilDeparture < 7`; a `Payment` record written to `db.payments`. Returns `{ booking, feeCents }`.\r\n\r\n### Step 5 — Tests\r\n`tests/refund.spec.ts`: extended with AC-1, AC-2, AC-3, AC-5 tests. Removed the now-incorrect \"older than 90 days flagged for manual review\" test (a 91-day booking now hits the 30-day window first and is rejected, not flagged).\r\n\r\n`tests/flight-change.spec.ts` (new): AC-6, AC-7 (economy + business), AC-8 (UTC boundary near midnight). Uses deterministic `requestedAt` parameter to avoid real-time coupling.\r\n\r\n## Deviations from plan\r\n\r\nNone. All steps implemented exactly as specified.\r\n\r\n## Notes for reviewer\r\n\r\n- The `MANUAL_REVIEW_AGE_DAYS = 90` branch in `validators.ts` is now unreachable under the current constant values (30 < 90). It is intentionally kept so that if `REFUND_WINDOW_DAYS` is raised above 90, the manual-review path still applies. If product confirms the 30-day window is permanent, the branch can be removed.\r\n- The old \"a booking older than 90 days is flagged for manual review\" test was removed from `refund.spec.ts` because it contradicts the new AC-1 behaviour (31+ day bookings are now rejected). The boundary spec (`refund-window.boundary.spec.ts`) is unchanged and still documents the pre-fix bug.\r\n",
+          "changeSummary": "+0 lines, -0 lines"
+        }
+      ],
+      "staleSince": null
+    },
+    "debug": {
+      "status": "done",
+      "artifact": "04-debug-notes.md",
+      "startedAt": "2026-09-25T14:55:17.285Z",
+      "completedAt": "2026-09-25T14:56:44.373Z",
+      "durationSec": 87,
+      "failure": null,
+      "visitCount": 1,
+      "history": [],
+      "staleSince": "2026-09-25T19:18:17.387Z"
+    },
+    "test": {
+      "status": "done",
+      "artifact": "05-tests.md",
+      "startedAt": "2026-09-25T14:58:37.731Z",
+      "completedAt": "2026-09-25T15:02:19.594Z",
+      "durationSec": 222,
+      "failure": null,
+      "visitCount": 1,
+      "history": [],
+      "staleSince": "2026-09-25T19:18:17.387Z"
+    },
+    "review": {
+      "status": "done",
+      "artifact": "06-review.md",
+      "startedAt": "2026-09-25T15:03:20.407Z",
+      "completedAt": "2026-09-25T15:19:51.550Z",
+      "durationSec": 991,
+      "failure": null,
+      "visitCount": 1,
+      "history": [],
+      "staleSince": "2026-09-25T19:18:17.387Z"
+    },
+    "pr": {
+      "status": "done",
+      "artifact": "07-pr.md",
+      "startedAt": "2026-09-25T15:20:51.644Z",
+      "completedAt": "2026-09-25T15:22:08.167Z",
+      "durationSec": 77,
+      "failure": null,
+      "visitCount": 1,
+      "history": [],
+      "staleSince": "2026-09-25T19:18:17.387Z"
+    },
+    "docs": {
+      "status": "done",
+      "artifact": "08-docs.md",
+      "startedAt": "2026-09-25T15:29:28.448Z",
+      "completedAt": "2026-09-25T15:32:19.945Z",
+      "durationSec": 171,
+      "failure": null,
+      "visitCount": 1,
+      "history": [],
+      "staleSince": "2026-09-25T19:18:17.387Z"
+    }
+  },
+  "acceptanceCriteria": [
+    {
+      "id": "AC-1",
+      "text": "Refund requests are approved only if submitted within 30 days of the original purchase date.",
+      "source": "REF-88.pdf p1 §Acceptance Criteria bullet 1",
+      "testable": true,
+      "ambiguityNote": null,
+      "covered": true,
+      "testRef": "hackathon-specific/sample-project/tests/refund.spec.ts:61"
+    },
+    {
+      "id": "AC-2",
+      "text": "When a refund is rejected because the request falls outside the 30-day window, the response includes the machine-readable reason code REFUND_WINDOW_EXPIRED.",
+      "source": "REF-88.pdf p1 §Acceptance Criteria bullet 2",
+      "testable": true,
+      "ambiguityNote": null,
+      "covered": true,
+      "testRef": "hackathon-specific/sample-project/tests/refund.spec.ts:73"
+    },
+    {
+      "id": "AC-3",
+      "text": "An admin user can force-approve a rejected refund (override the 30-day window rejection).",
+      "source": "REF-88.pdf p1 §Acceptance Criteria bullet 3",
+      "testable": true,
+      "ambiguityNote": null,
+      "covered": true,
+      "testRef": "hackathon-specific/sample-project/tests/refund.spec.ts:85"
+    },
+    {
+      "id": "AC-4",
+      "text": "Refunds should be processed promptly.",
+      "source": "REF-88.pdf p1 §Acceptance Criteria bullet 4",
+      "testable": false,
+      "ambiguityNote": "No SLA bound given anywhere in the ticket. Proposed measurable rewrite (requires stakeholder input): 'The POST /bookings/:id/refund endpoint responds within X ms at p95 under Y concurrent requests.' Request a specific SLA from Elena Cho (Product) or Support before treating this as testable.",
+      "covered": false,
+      "testRef": null
+    },
+    {
+      "id": "AC-5",
+      "text": "When an admin overrides a rejected refund, an audit event is logged containing the admin's user id and a timestamp.",
+      "source": "REF-88.pdf p2 §Comments, Marcus Webb 2026-09-22",
+      "testable": true,
+      "ambiguityNote": null,
+      "covered": true,
+      "testRef": "hackathon-specific/sample-project/tests/refund.spec.ts:101"
+    },
+    {
+      "id": "AC-6",
+      "text": "Flight changes requested more than 7 days before scheduled departure incur no change fee.",
+      "source": "REF-91.pdf p1 §Acceptance Criteria bullet 1",
+      "testable": true,
+      "ambiguityNote": null,
+      "covered": true,
+      "testRef": "hackathon-specific/sample-project/tests/flight-change.spec.ts:42"
+    },
+    {
+      "id": "AC-7",
+      "text": "Flight changes requested within 7 days of scheduled departure incur the standard change fee configured for that fare class.",
+      "source": "REF-91.pdf p1 §Acceptance Criteria bullet 2",
+      "testable": true,
+      "ambiguityNote": null,
+      "covered": true,
+      "testRef": "hackathon-specific/sample-project/tests/flight-change.spec.ts:55"
+    },
+    {
+      "id": "AC-8",
+      "text": "The 7-day boundary is computed in UTC regardless of the customer's local timezone.",
+      "source": "REF-91.pdf p1 §Acceptance Criteria bullet 3",
+      "testable": true,
+      "ambiguityNote": null,
+      "covered": true,
+      "testRef": "hackathon-specific/sample-project/tests/flight-change.spec.ts:79"
+    }
+  ],
+  "knowledgeHarvested": [
+    "gotcha-001"
+  ],
+  "filesTouched": [
+    "hackathon-specific/sample-project/src/refunds/validators.ts",
+    "hackathon-specific/sample-project/src/refunds/refundService.ts",
+    "hackathon-specific/sample-project/src/lib/db.ts",
+    "hackathon-specific/sample-project/src/bookings/bookingService.ts",
+    "hackathon-specific/sample-project/tests/refund.spec.ts",
+    "hackathon-specific/sample-project/tests/flight-change.spec.ts",
+    ".relay/tasks/T-000-mariam/03-implementation.md"
+  ]
+}

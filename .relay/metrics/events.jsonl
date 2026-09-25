@@ -1,0 +1,33 @@
+{"ts":"2026-09-25T13:55:56.152Z","task":"T-000","mode":"relay","event":"stage_start","stage":"onboard"}
+{"ts":"2026-09-25T13:59:28.789Z","task":"T-000","mode":"relay","event":"stage_end","stage":"onboard","durationSec":213,"artifact":"00-onboard.md"}
+{"ts":"2026-09-25T14:27:29.154Z","task":"T-000","mode":"relay","event":"stage_start","stage":"brief"}
+{"ts":"2026-09-25T14:28:35.427Z","task":"T-000","mode":"relay","event":"stage_end","stage":"brief","durationSec":66,"artifact":"01-brief.md"}
+{"ts":"2026-09-25T14:32:04.723Z","task":"T-000","mode":"relay","event":"stage_start","stage":"debug"}
+{"ts":"2026-09-25T14:38:37.286Z","task":"T-000","mode":"relay","event":"stage_cancel","stage":"debug","reason":"explicit"}
+{"ts":"2026-09-25T14:38:37.286Z","task":"T-000","mode":"relay","event":"stage_failed","stage":"debug","reason":"Cancelled with no usable prior snapshot to restore."}
+{"ts":"2026-09-25T14:40:09.133Z","task":"T-000","mode":"relay","event":"stage_end","stage":"debug","durationSec":0,"artifact":"04-debug-notes.md"}
+{"ts":"2026-09-25T14:40:17.279Z","task":"T-000","mode":"relay","event":"stage_start","stage":"plan"}
+{"ts":"2026-09-25T14:41:20.395Z","task":"T-000","mode":"relay","event":"stage_end","stage":"plan","durationSec":63,"artifact":"02-plan.md"}
+{"ts":"2026-09-25T14:45:27.885Z","task":"T-000","mode":"relay","event":"stage_start","stage":"implement"}
+{"ts":"2026-09-25T14:49:22.058Z","task":"T-000","mode":"relay","event":"stage_end","stage":"implement","durationSec":234,"artifact":"03-implementation.md"}
+{"ts":"2026-09-25T14:55:17.285Z","task":"T-000","mode":"relay","event":"stage_start","stage":"debug"}
+{"ts":"2026-09-25T14:56:35.641Z","task":"T-000","mode":"relay","event":"knowledge_harvested","id":"gotcha-001"}
+{"ts":"2026-09-25T14:56:44.373Z","task":"T-000","mode":"relay","event":"stage_end","stage":"debug","durationSec":87,"artifact":"04-debug-notes.md"}
+{"ts":"2026-09-25T14:58:37.731Z","task":"T-000","mode":"relay","event":"stage_start","stage":"test"}
+{"ts":"2026-09-25T15:02:19.594Z","task":"T-000","mode":"relay","event":"stage_end","stage":"test","durationSec":222,"artifact":"05-tests.md"}
+{"ts":"2026-09-25T15:03:20.407Z","task":"T-000","mode":"relay","event":"stage_start","stage":"review"}
+{"ts":"2026-09-25T15:19:51.550Z","task":"T-000","mode":"relay","event":"stage_end","stage":"review","durationSec":991,"artifact":"06-review.md"}
+{"ts":"2026-09-25T15:20:51.644Z","task":"T-000","mode":"relay","event":"stage_start","stage":"pr"}
+{"ts":"2026-09-25T15:22:08.167Z","task":"T-000","mode":"relay","event":"stage_end","stage":"pr","durationSec":77,"artifact":"07-pr.md"}
+{"ts":"2026-09-25T15:29:28.448Z","task":"T-000","mode":"relay","event":"stage_start","stage":"docs"}
+{"ts":"2026-09-25T15:32:19.945Z","task":"T-000","mode":"relay","event":"stage_end","stage":"docs","durationSec":171,"artifact":"08-docs.md"}
+{"ts":"2026-09-25T19:18:17.387Z","task":"T-000","mode":"relay","event":"revisit_detected","fromStage":"implement","toStage":"implement"}
+{"ts":"2026-09-25T19:18:17.387Z","task":"T-000","mode":"relay","event":"stage_start","stage":"implement"}
+{"ts":"2026-09-25T19:18:18.268Z","task":"T-000","mode":"relay","event":"stage_amended","stage":"implement","visitNumber":2,"changeSummary":"+0 lines, -0 lines"}
+{"ts":"2026-09-25T19:18:18.268Z","task":"T-000","mode":"relay","event":"stage_end","stage":"implement","durationSec":1,"artifact":"03-implementation.md"}
+{"ts":"2026-09-25T19:18:18.699Z","task":"T-000","mode":"relay","event":"revisit_detected","fromStage":"test","toStage":"test"}
+{"ts":"2026-09-25T19:18:18.699Z","task":"T-000","mode":"relay","event":"stage_start","stage":"test"}
+{"ts":"2026-09-25T19:18:19.092Z","task":"T-000","mode":"relay","event":"stage_amended","stage":"test","visitNumber":2,"changeSummary":"+0 lines, -0 lines"}
+{"ts":"2026-09-25T19:18:19.092Z","task":"T-000","mode":"relay","event":"stage_end","stage":"test","durationSec":0,"artifact":"05-tests.md"}
+{"ts":"2026-09-25T19:35:19.467Z","task":"T-000","mode":"relay","event":"revisit_detected","fromStage":"implement","toStage":"implement"}
+{"ts":"2026-09-25T19:35:19.467Z","task":"T-000","mode":"relay","event":"stage_start","stage":"implement"}

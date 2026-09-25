@@ -1,0 +1,161 @@
+{
+  "id": "T-000",
+  "slug": "mariam",
+  "title": "mariam",
+  "source": {
+    "type": "adhoc",
+    "ref": ""
+  },
+  "createdAt": "2026-09-25T13:50:51.645Z",
+  "updatedAt": "2026-09-25T14:40:09.134Z",
+  "tags": [],
+  "mode": "relay",
+  "currentStage": "brief",
+  "stages": {
+    "onboard": {
+      "status": "done",
+      "artifact": "00-onboard.md",
+      "startedAt": "2026-09-25T13:55:56.152Z",
+      "completedAt": "2026-09-25T13:59:28.789Z",
+      "durationSec": 213,
+      "failure": null
+    },
+    "brief": {
+      "status": "done",
+      "artifact": "01-brief.md",
+      "startedAt": "2026-09-25T14:27:29.154Z",
+      "completedAt": "2026-09-25T14:28:35.427Z",
+      "durationSec": 66,
+      "failure": null
+    },
+    "plan": {
+      "status": "pending",
+      "artifact": null,
+      "startedAt": null,
+      "completedAt": null,
+      "durationSec": null
+    },
+    "implement": {
+      "status": "pending",
+      "artifact": null,
+      "startedAt": null,
+      "completedAt": null,
+      "durationSec": null
+    },
+    "debug": {
+      "status": "done",
+      "artifact": "04-debug-notes.md",
+      "startedAt": "2026-09-25T14:40:09.133Z",
+      "completedAt": "2026-09-25T14:40:09.133Z",
+      "durationSec": 0,
+      "failure": {
+        "reason": "Cancelled with no usable prior snapshot to restore.",
+        "at": "2026-09-25T14:38:37.286Z"
+      }
+    },
+    "test": {
+      "status": "pending",
+      "artifact": null,
+      "startedAt": null,
+      "completedAt": null,
+      "durationSec": null
+    },
+    "review": {
+      "status": "pending",
+      "artifact": null,
+      "startedAt": null,
+      "completedAt": null,
+      "durationSec": null
+    },
+    "pr": {
+      "status": "pending",
+      "artifact": null,
+      "startedAt": null,
+      "completedAt": null,
+      "durationSec": null
+    },
+    "docs": {
+      "status": "pending",
+      "artifact": null,
+      "startedAt": null,
+      "completedAt": null,
+      "durationSec": null
+    }
+  },
+  "acceptanceCriteria": [
+    {
+      "id": "AC-1",
+      "text": "Refund requests are approved only if submitted within 30 days of the original purchase date.",
+      "source": "REF-88.pdf p1 §Acceptance Criteria bullet 1",
+      "testable": true,
+      "ambiguityNote": null,
+      "covered": false,
+      "testRef": null
+    },
+    {
+      "id": "AC-2",
+      "text": "When a refund is rejected because the request falls outside the 30-day window, the response includes the machine-readable reason code REFUND_WINDOW_EXPIRED.",
+      "source": "REF-88.pdf p1 §Acceptance Criteria bullet 2",
+      "testable": true,
+      "ambiguityNote": null,
+      "covered": false,
+      "testRef": null
+    },
+    {
+      "id": "AC-3",
+      "text": "An admin user can force-approve a rejected refund (override the 30-day window rejection).",
+      "source": "REF-88.pdf p1 §Acceptance Criteria bullet 3",
+      "testable": true,
+      "ambiguityNote": null,
+      "covered": false,
+      "testRef": null
+    },
+    {
+      "id": "AC-4",
+      "text": "Refunds should be processed promptly.",
+      "source": "REF-88.pdf p1 §Acceptance Criteria bullet 4",
+      "testable": false,
+      "ambiguityNote": "No SLA bound given anywhere in the ticket. Proposed measurable rewrite (requires stakeholder input): 'The POST /bookings/:id/refund endpoint responds within X ms at p95 under Y concurrent requests.' Request a specific SLA from Elena Cho (Product) or Support before treating this as testable.",
+      "covered": false,
+      "testRef": null
+    },
+    {
+      "id": "AC-5",
+      "text": "When an admin overrides a rejected refund, an audit event is logged containing the admin's user id and a timestamp.",
+      "source": "REF-88.pdf p2 §Comments, Marcus Webb 2026-09-22",
+      "testable": true,
+      "ambiguityNote": null,
+      "covered": false,
+      "testRef": null
+    },
+    {
+      "id": "AC-6",
+      "text": "Flight changes requested more than 7 days before scheduled departure incur no change fee.",
+      "source": "REF-91.pdf p1 §Acceptance Criteria bullet 1",
+      "testable": true,
+      "ambiguityNote": null,
+      "covered": false,
+      "testRef": null
+    },
+    {
+      "id": "AC-7",
+      "text": "Flight changes requested within 7 days of scheduled departure incur the standard change fee configured for that fare class.",
+      "source": "REF-91.pdf p1 §Acceptance Criteria bullet 2",
+      "testable": true,
+      "ambiguityNote": null,
+      "covered": false,
+      "testRef": null
+    },
+    {
+      "id": "AC-8",
+      "text": "The 7-day boundary is computed in UTC regardless of the customer's local timezone.",
+      "source": "REF-91.pdf p1 §Acceptance Criteria bullet 3",
+      "testable": true,
+      "ambiguityNote": null,
+      "covered": false,
+      "testRef": null
+    }
+  ],
+  "knowledgeHarvested": [],
+  "filesTouched": []
+}

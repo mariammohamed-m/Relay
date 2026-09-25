@@ -1,0 +1,173 @@
+{
+  "id": "T-000",
+  "slug": "mariam",
+  "title": "mariam",
+  "source": {
+    "type": "adhoc",
+    "ref": ""
+  },
+  "createdAt": "2026-09-25T13:50:51.645Z",
+  "updatedAt": "2026-09-25T15:22:08.168Z",
+  "tags": [],
+  "mode": "relay",
+  "currentStage": "pr",
+  "stages": {
+    "onboard": {
+      "status": "done",
+      "artifact": "00-onboard.md",
+      "startedAt": "2026-09-25T13:55:56.152Z",
+      "completedAt": "2026-09-25T13:59:28.789Z",
+      "durationSec": 213,
+      "failure": null
+    },
+    "brief": {
+      "status": "done",
+      "artifact": "01-brief.md",
+      "startedAt": "2026-09-25T14:27:29.154Z",
+      "completedAt": "2026-09-25T14:28:35.427Z",
+      "durationSec": 66,
+      "failure": null
+    },
+    "plan": {
+      "status": "done",
+      "artifact": "02-plan.md",
+      "startedAt": "2026-09-25T14:40:17.279Z",
+      "completedAt": "2026-09-25T14:41:20.395Z",
+      "durationSec": 63,
+      "failure": null
+    },
+    "implement": {
+      "status": "done",
+      "artifact": "03-implementation.md",
+      "startedAt": "2026-09-25T14:45:27.885Z",
+      "completedAt": "2026-09-25T14:49:22.058Z",
+      "durationSec": 234,
+      "failure": null
+    },
+    "debug": {
+      "status": "done",
+      "artifact": "04-debug-notes.md",
+      "startedAt": "2026-09-25T14:55:17.285Z",
+      "completedAt": "2026-09-25T14:56:44.373Z",
+      "durationSec": 87,
+      "failure": null
+    },
+    "test": {
+      "status": "done",
+      "artifact": "05-tests.md",
+      "startedAt": "2026-09-25T14:58:37.731Z",
+      "completedAt": "2026-09-25T15:02:19.594Z",
+      "durationSec": 222,
+      "failure": null
+    },
+    "review": {
+      "status": "done",
+      "artifact": "06-review.md",
+      "startedAt": "2026-09-25T15:03:20.407Z",
+      "completedAt": "2026-09-25T15:19:51.550Z",
+      "durationSec": 991,
+      "failure": null
+    },
+    "pr": {
+      "status": "done",
+      "artifact": "07-pr.md",
+      "startedAt": "2026-09-25T15:20:51.644Z",
+      "completedAt": "2026-09-25T15:22:08.167Z",
+      "durationSec": 77,
+      "failure": null
+    },
+    "docs": {
+      "status": "pending",
+      "artifact": null,
+      "startedAt": null,
+      "completedAt": null,
+      "durationSec": null
+    }
+  },
+  "acceptanceCriteria": [
+    {
+      "id": "AC-1",
+      "text": "Refund requests are approved only if submitted within 30 days of the original purchase date.",
+      "source": "REF-88.pdf p1 §Acceptance Criteria bullet 1",
+      "testable": true,
+      "ambiguityNote": null,
+      "covered": true,
+      "testRef": "hackathon-specific/sample-project/tests/refund.spec.ts:61"
+    },
+    {
+      "id": "AC-2",
+      "text": "When a refund is rejected because the request falls outside the 30-day window, the response includes the machine-readable reason code REFUND_WINDOW_EXPIRED.",
+      "source": "REF-88.pdf p1 §Acceptance Criteria bullet 2",
+      "testable": true,
+      "ambiguityNote": null,
+      "covered": true,
+      "testRef": "hackathon-specific/sample-project/tests/refund.spec.ts:73"
+    },
+    {
+      "id": "AC-3",
+      "text": "An admin user can force-approve a rejected refund (override the 30-day window rejection).",
+      "source": "REF-88.pdf p1 §Acceptance Criteria bullet 3",
+      "testable": true,
+      "ambiguityNote": null,
+      "covered": true,
+      "testRef": "hackathon-specific/sample-project/tests/refund.spec.ts:85"
+    },
+    {
+      "id": "AC-4",
+      "text": "Refunds should be processed promptly.",
+      "source": "REF-88.pdf p1 §Acceptance Criteria bullet 4",
+      "testable": false,
+      "ambiguityNote": "No SLA bound given anywhere in the ticket. Proposed measurable rewrite (requires stakeholder input): 'The POST /bookings/:id/refund endpoint responds within X ms at p95 under Y concurrent requests.' Request a specific SLA from Elena Cho (Product) or Support before treating this as testable.",
+      "covered": false,
+      "testRef": null
+    },
+    {
+      "id": "AC-5",
+      "text": "When an admin overrides a rejected refund, an audit event is logged containing the admin's user id and a timestamp.",
+      "source": "REF-88.pdf p2 §Comments, Marcus Webb 2026-09-22",
+      "testable": true,
+      "ambiguityNote": null,
+      "covered": true,
+      "testRef": "hackathon-specific/sample-project/tests/refund.spec.ts:101"
+    },
+    {
+      "id": "AC-6",
+      "text": "Flight changes requested more than 7 days before scheduled departure incur no change fee.",
+      "source": "REF-91.pdf p1 §Acceptance Criteria bullet 1",
+      "testable": true,
+      "ambiguityNote": null,
+      "covered": true,
+      "testRef": "hackathon-specific/sample-project/tests/flight-change.spec.ts:42"
+    },
+    {
+      "id": "AC-7",
+      "text": "Flight changes requested within 7 days of scheduled departure incur the standard change fee configured for that fare class.",
+      "source": "REF-91.pdf p1 §Acceptance Criteria bullet 2",
+      "testable": true,
+      "ambiguityNote": null,
+      "covered": true,
+      "testRef": "hackathon-specific/sample-project/tests/flight-change.spec.ts:55"
+    },
+    {
+      "id": "AC-8",
+      "text": "The 7-day boundary is computed in UTC regardless of the customer's local timezone.",
+      "source": "REF-91.pdf p1 §Acceptance Criteria bullet 3",
+      "testable": true,
+      "ambiguityNote": null,
+      "covered": true,
+      "testRef": "hackathon-specific/sample-project/tests/flight-change.spec.ts:79"
+    }
+  ],
+  "knowledgeHarvested": [
+    "gotcha-001"
+  ],
+  "filesTouched": [
+    "hackathon-specific/sample-project/src/refunds/validators.ts",
+    "hackathon-specific/sample-project/src/refunds/refundService.ts",
+    "hackathon-specific/sample-project/src/lib/db.ts",
+    "hackathon-specific/sample-project/src/bookings/bookingService.ts",
+    "hackathon-specific/sample-project/tests/refund.spec.ts",
+    "hackathon-specific/sample-project/tests/flight-change.spec.ts",
+    ".relay/tasks/T-000-mariam/03-implementation.md"
+  ]
+}

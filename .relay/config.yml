@@ -1,0 +1,19 @@
+project: relay
+schemaVersion: 1
+
+stages:
+  - onboard
+  - brief
+  - plan
+  - implement
+  - debug
+  - test
+  - review
+  - pr
+  - docs
+
+paths:
+  tasks: .relay/tasks
+  knowledge: .relay/knowledge
+  metrics: .relay/metrics/events.jsonl
+  dashboardData: dashboard/public/relay-data.json
