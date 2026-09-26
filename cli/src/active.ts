@@ -60,6 +60,6 @@ export async function resolveActiveTask(explicitId?: string): Promise<ActiveTask
   return { id: task.id, dir, task };
 }
 
-export async function setActiveTask(id: string): Promise<void> {
-  await atomicWrite(activeFile(), id + '\n');
+export async function setActiveTask(folderName: string): Promise<void> {
+  await atomicWrite(activeFile(), folderName + '\n');
 }

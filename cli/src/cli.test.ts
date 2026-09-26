@@ -70,7 +70,7 @@ test("start scaffolds, creates, activates, and compiles a task in one call", asy
       path.join(process.cwd(), ".bob", ".active"),
       "utf8",
     ).trim();
-    assert.equal(active, "T-000");
+    assert.equal(active, "T-000-fix-the-thing");
 
     const compiled = JSON.parse(
       readFileSync(

@@ -47,7 +47,7 @@ npx relay doctor
 
 ## Relay workflow rules (applies every stage)
 
-1. Read `.bob/.active` to get the active task id. Never hardcode it. Run `npx relay status` if in doubt.
+1. Read `.bob/.active` to get the active task's full folder name (e.g. `T-003-add-foo`, not just `T-003`) and use it as-is under `.bob/tasks/`. Never hardcode it, and never re-derive or truncate it - writing to a path that doesn't match `.active` exactly creates a stray duplicate task folder. Run `npx relay status` if in doubt.
 2. Before touching any file, read `.bob/knowledge/` (`gotchas.md`, `architecture.md`, `decisions.md`, `glossary.md`).
 3. Every stage: `npx relay stage start <stage>` → do work → write artifact → `npx relay stage end <stage>` → `npx relay compile`. On CLI failure: report and continue - never abort the stage.
 4. Each stage owns exactly one artifact file (see table below). Never write another stage's file.

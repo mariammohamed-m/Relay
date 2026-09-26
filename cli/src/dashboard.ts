@@ -4,11 +4,12 @@
 // monorepo's own dashboard without needing Vite or a second project.
 import { createServer } from "node:http";
 import { readFile } from "node:fs/promises";
-import { existsSync } from "node:fs";
+import { existsSync, watch } from "node:fs";
 import path from "node:path";
 import { exec } from "node:child_process";
 import { fileURLToPath } from "node:url";
-import { loadConfig, dashboardDataPath } from "./paths.js";
+import { loadConfig, dashboardDataPath, relayRoot } from "./paths.js";
+import { compileOnce } from "./compile.js";
 
 const DASHBOARD_DIST = path.join(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -131,4 +132,20 @@ export async function cmdDashboard(opts: DashboardOptions): Promise<void> {
   console.log(`Dashboard running at ${url}`);
   console.log("Press Ctrl+C to stop.");
   if (opts.open !== false) openBrowser(url);
+
+  // Keep relay-data.json fresh while the dashboard is open, so stage
+  // progress shows up live instead of needing a manual `relay compile`.
+  let pending = false;
+  // ponytail: fs.watch recursive is win32/darwin only; add chokidar if Linux demo support is needed.
+  watch(relayRoot(), { recursive: true }, () => {
+    if (pending) return;
+    pending = true;
+    setTimeout(() => {
+      compileOnce()
+        .catch((err) => console.warn(`warning: recompile failed: ${(err as Error).message}`))
+        .finally(() => {
+          pending = false;
+        });
+    }, 200);
+  });
 }

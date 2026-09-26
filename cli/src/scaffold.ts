@@ -209,12 +209,13 @@ export async function cmdTaskNew(
     await writeIfAbsent(path.join(dir, artifact), stubArtifactContent(stage));
   }
 
-  await setActiveTask(id);
+  const folderName = `${id}-${slug}`;
+  await setActiveTask(folderName);
 
   console.log(`Created ${path.relative(process.cwd(), dir)}`);
   console.log(`Mode: ${mode}`);
   if (task.tags.length) console.log(`Tags: ${task.tags.join(", ")}`);
-  console.log(`Active task set to ${id}.`);
+  console.log(`Active task set to ${folderName}.`);
   console.log(`\nPaste into Bob: @.bob/tasks/${id}-${slug}/`);
 }
 
@@ -253,7 +254,7 @@ export async function cmdTaskUse(id: string): Promise<void> {
   const dirs = await listDirs(tasksDir());
   const match = dirs.find((d) => d === id || d.startsWith(`${id}-`));
   if (!match) throw new Error(`No task found matching "${id}".`);
-  await setActiveTask(id);
+  await setActiveTask(match);
   console.log(`Active task set to ${match}.`);
 }
 
