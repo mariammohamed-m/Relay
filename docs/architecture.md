@@ -4,19 +4,19 @@ Relay is two layers around one shared data contract (`cli/src/types.ts`).
 
 ## Layers
 
-**1. Bob IDE configuration (`.bob/relay/`)**
-Custom modes, rules, and skills that make Bob read `.bob/relay/knowledge/` at the
+**1. Bob IDE configuration (`.bob/`)**
+Custom modes, rules, and skills that make Bob read `.bob/knowledge/` at the
 start of a task and write a structured stage artifact at the end of one.
-Bob is the only thing that writes prose into `.bob/relay/tasks/*/`; it never
+Bob is the only thing that writes prose into `.bob/tasks/*/`; it never
 writes the JSON directly - `task.json` is kept in sync by the CLI as stages
 complete.
 
 **2. CLI (`cli/`)**
 
-- `scaffold` - creates a new `.bob/relay/tasks/T-NNN-<slug>/` directory with an
+- `scaffold` - creates a new `.bob/tasks/T-NNN-<slug>/` directory with an
   initial `task.json` and empty stage files.
-- `events` - append-only writer/reader for `.bob/relay/metrics/events.jsonl`.
-- `compile` - reads all of `.bob/relay/`, computes `ImpactSummary`, and writes
+- `events` - append-only writer/reader for `.bob/metrics/events.jsonl`.
+- `compile` - reads all of `.bob/`, computes `ImpactSummary`, and writes
   the compiled dashboard data file (`config.yml`'s `dashboardData` path).
 - `report` - terminal summary of relay-vs-baseline impact.
 - `dashboard` - a static React app, pre-built and bundled in the package
@@ -28,7 +28,7 @@ complete.
 
 ```mermaid
 flowchart LR
-    subgraph Task["One task, one directory: .bob/relay/tasks/T-NNN-slug/"]
+    subgraph Task["One task, one directory: .bob/tasks/T-NNN-slug/"]
         A[01-brief.md] --> B[02-plan.md]
         B --> C[03-implementation.md]
         C --> D[04-debug-notes.md]
@@ -37,12 +37,12 @@ flowchart LR
         F --> G[07-pr.md]
     end
 
-    K[(.bob/relay/knowledge/\ngotchas · architecture\ndecisions · glossary)]
+    K[(.bob/knowledge/\ngotchas · architecture\ndecisions · glossary)]
 
     K -- read at onboard --> A
     D -- harvest --> K
 
-    G --> Ev[.bob/relay/metrics/events.jsonl]
+    G --> Ev[.bob/metrics/events.jsonl]
     A --> Ev
     B --> Ev
     C --> Ev
