@@ -21,7 +21,8 @@
       "failure": null,
       "visitCount": 1,
       "history": [],
-      "staleSince": null
+      "staleSince": null,
+      "source": "bob"
     },
     "brief": {
       "status": "done",
@@ -32,7 +33,8 @@
       "failure": null,
       "visitCount": 1,
       "history": [],
-      "staleSince": null
+      "staleSince": null,
+      "source": "bob"
     },
     "plan": {
       "status": "done",
@@ -43,7 +45,8 @@
       "failure": null,
       "visitCount": 1,
       "history": [],
-      "staleSince": null
+      "staleSince": null,
+      "source": "bob"
     },
     "implement": {
       "status": "running",
@@ -71,7 +74,8 @@
           "changeSummary": null
         }
       ],
-      "staleSince": null
+      "staleSince": null,
+      "source": null
     },
     "debug": {
       "status": "done",
@@ -82,7 +86,8 @@
       "failure": null,
       "visitCount": 1,
       "history": [],
-      "staleSince": "2026-09-25T19:35:19.467Z"
+      "staleSince": "2026-09-25T19:35:19.467Z",
+      "source": "bob"
     },
     "test": {
       "status": "done",
@@ -102,7 +107,8 @@
           "changeSummary": "+0 lines, -0 lines"
         }
       ],
-      "staleSince": "2026-09-25T19:35:19.467Z"
+      "staleSince": "2026-09-25T19:35:19.467Z",
+      "source": "bob"
     },
     "review": {
       "status": "done",
@@ -113,7 +119,8 @@
       "failure": null,
       "visitCount": 1,
       "history": [],
-      "staleSince": "2026-09-25T19:35:19.467Z"
+      "staleSince": "2026-09-25T19:35:19.467Z",
+      "source": "bob"
     },
     "pr": {
       "status": "done",
@@ -124,7 +131,8 @@
       "failure": null,
       "visitCount": 1,
       "history": [],
-      "staleSince": "2026-09-25T19:35:19.467Z"
+      "staleSince": "2026-09-25T19:35:19.467Z",
+      "source": "bob"
     },
     "docs": {
       "status": "done",
@@ -135,7 +143,8 @@
       "failure": null,
       "visitCount": 1,
       "history": [],
-      "staleSince": "2026-09-25T19:35:19.467Z"
+      "staleSince": "2026-09-25T19:35:19.467Z",
+      "source": "bob"
     }
   },
   "acceptanceCriteria": [
