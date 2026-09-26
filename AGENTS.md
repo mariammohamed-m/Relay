@@ -6,8 +6,8 @@ This file provides guidance to agents when working with code in this repository.
 
 Relay is not a standalone app. It is two things sharing one data contract:
 
-1. **`.bob/`** - Bob IDE configuration root. Relay's own modes/rules/skills/commands and its task data live isolated inside **`.bob/relay/`** (a single subpackage folder) so `relay init` never has to touch or overwrite anything else a developer already has in `.bob/`.
-2. **`cli/`** - TypeScript CLI (`bob-relay`, the published npm package) that scaffolds and manages `.bob/relay/` files, compiles them into a JSON snapshot, and serves a pre-built visual dashboard (`cli/dashboard-dist/`, bundled into the package) that reads that one compiled file, no server beyond the CLI's own static file server.
+1. **`.bob/`** - Bob IDE configuration root. Relay owns this folder directly: modes/rules/skills/commands and Relay's own task data (config.yml, knowledge/, tasks/, metrics/) all live at the top level of `.bob/`. `relay init` writes `.bob/` wholesale and overwrites it (or creates it if missing); it refuses to clobber an existing `.bob/` unless run with `--force`.
+2. **`cli/`** - TypeScript CLI (`bob-relay`, the published npm package) that scaffolds and manages `.bob/` files, compiles them into a JSON snapshot, and serves a pre-built visual dashboard (`cli/dashboard-dist/`, bundled into the package) that reads that one compiled file, no server beyond the CLI's own static file server.
 
 ## Commands
 
@@ -41,14 +41,14 @@ npx relay doctor
 
 - **`cli/src/types.ts` is the single source of truth** for all data shapes. The bundled dashboard (built from source elsewhere and shipped pre-built in `cli/dashboard-dist/`) reads the same shapes from the compiled JSON snapshot - never duplicate or redefine them.
 - **`STAGES` const array** (`onboard,brief,plan,implement,debug,test,review,pr,docs`) is the canonical stage order. Iterate over it; never hardcode the list elsewhere. `StageId` is derived from it.
-- **The dashboard is a dumb reader** - it reads only the compiled data snapshot, never raw `.bob/relay/` files. Stage artifact Markdown and subagent lanes are embedded into `StageRecord.content` / `StageRecord.subagents` at compile time.
-- **`.bob/` is NOT gitignored** - it is the product. `relay init` only ever writes inside `.bob/relay/`; if `.bob/` already exists (a developer's own Bob config), it's left untouched and a warning is printed about possible mode/rule conflicts.
+- **The dashboard is a dumb reader** - it reads only the compiled data snapshot, never raw `.bob/` files. Stage artifact Markdown and subagent lanes are embedded into `StageRecord.content` / `StageRecord.subagents` at compile time.
+- **`.bob/` is NOT gitignored** - it is the product. `relay init` overwrites `.bob/` wholesale (or creates it if missing); it refuses to touch an existing `.bob/` unless run with `--force`.
 - **`fs.watch` recursive** only works on win32/darwin. If Linux support is needed, add chokidar (see `compile.ts` comment).
 
 ## Relay workflow rules (applies every stage)
 
-1. Read `.bob/relay/.active` to get the active task id. Never hardcode it. Run `npx relay status` if in doubt.
-2. Before touching any file, read `.bob/relay/knowledge/` (`gotchas.md`, `architecture.md`, `decisions.md`, `glossary.md`).
+1. Read `.bob/.active` to get the active task id. Never hardcode it. Run `npx relay status` if in doubt.
+2. Before touching any file, read `.bob/knowledge/` (`gotchas.md`, `architecture.md`, `decisions.md`, `glossary.md`).
 3. Every stage: `npx relay stage start <stage>` → do work → write artifact → `npx relay stage end <stage>` → `npx relay compile`. On CLI failure: report and continue - never abort the stage.
 4. Each stage owns exactly one artifact file (see table below). Never write another stage's file.
 5. Write only `task.json` fields your stage owns - the CLI owns `stages.*`; never edit it directly.
@@ -72,9 +72,9 @@ npx relay doctor
 - **`AcceptanceCriterion.covered`** must only be `true` when a real test verifies it. An honest amber (`testable:true, covered:false`) is a product requirement - never mark something covered just because it was implemented.
 - **`atomicWrite`** (in `cli/src/fsutil.ts`) is mandatory for all file writes in the CLI - it uses a temp-file + rename to prevent corruption. Never use `writeFile` directly for task.json.
 - **`gotchas.md` entries** use a strict format that `knowledge.ts`'s `parseGotchas` requires: `## gotcha-NNN - Title` heading, then `- **field:** value` bullets in exact order. Off-format entries silently fail to compile into `relay-data.json`. Activate the `relay-harvest` skill for the exact template.
-- **paths.ts exports functions, not constants** - all `.bob/relay/` paths are computed from `process.cwd()` at call time. Tests `chdir` into a scratch temp dir per test; anything that caches a path at import time will break tests.
+- **paths.ts exports functions, not constants** - all `.bob/` paths are computed from `process.cwd()` at call time. Tests `chdir` into a scratch temp dir per test; anything that caches a path at import time will break tests.
 - **`cli/` uses `"module": "NodeNext"`** - all local imports must use `.js` extensions, even for `.ts` source files (e.g. `import { foo } from './fsutil.js'`).
-- See gotcha-001 in `.bob/relay/knowledge/gotchas.md` for the current live example of a harvested knowledge entry and its exact required format.
+- See gotcha-001 in `.bob/knowledge/gotchas.md` for the current live example of a harvested knowledge entry and its exact required format.
 
 ## Code style
 

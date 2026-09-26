@@ -13,23 +13,23 @@ Relay measures it, and closes the gap.
 ## The baton
 
 Relay's core idea: carry context forward as a **baton**, not tribal memory.
-At every stage, structured files land in `.bob/relay/` - Relay's own
-subfolder inside your project's existing `.bob/` config - plain Markdown and
-JSON, committed to the repo alongside the code they describe:
+At every stage, structured files land in `.bob/` - the same folder as your
+Bob IDE config - plain Markdown and JSON, committed to the repo alongside
+the code they describe:
 
-- `.bob/relay/tasks/T-NNN-<slug>/` - one directory per task, one file per
+- `.bob/tasks/T-NNN-<slug>/` - one directory per task, one file per
   stage (`00-onboard.md` → `07-pr.md`), plus a `task.json` tracking status,
   acceptance criteria, and files touched.
-- `.bob/relay/knowledge/` - the durable, cross-task memory: gotchas,
+- `.bob/knowledge/` - the durable, cross-task memory: gotchas,
   architecture notes, decisions, glossary.
-- `.bob/relay/metrics/events.jsonl` - a timestamped event log of every stage
+- `.bob/metrics/events.jsonl` - a timestamped event log of every stage
   transition, used to measure relay-assisted runs against manual baselines.
-- `.bob/relay/.active` - the id of the currently active task (what `relay
+- `.bob/.active` - the id of the currently active task (what `relay
 status` and every Bob mode read to know which task they're working on).
 
 Plain files in git, not a database, is deliberate:
 
-- Bob reads them natively via `@.bob/relay/...` context mentions - no custom
+- Bob reads them natively via `@.bob/...` context mentions - no custom
   retrieval layer.
 - They survive in git history and diff like any other change.
 - The dashboard is a dumb static reader of one compiled JSON file - no
@@ -39,7 +39,7 @@ Plain files in git, not a database, is deliberate:
 
 The differentiator isn't the file format - it's that the baton is a loop, not
 a relay race with one winner. Knowledge harvested during `debug` gets written
-to `.bob/relay/knowledge/gotchas.md`. The **next** task's `onboard` stage
+to `.bob/knowledge/gotchas.md`. The **next** task's `onboard` stage
 reads that file before Bob writes a line of code. A bug found once is a bug
 avoided forever after. Most developer tooling decays as a codebase grows -
 more files, more history, more to search. Relay's knowledge base compounds
@@ -49,8 +49,8 @@ instead: every finished task makes the next one faster.
 
 Relay is two things working off one shared data contract (`cli/src/types.ts`):
 
-1. **Bob IDE configuration** (`.bob/relay/`) - custom modes, rules, and
-   skills that make Bob read `.bob/relay/knowledge/` on entry and write
+1. **Bob IDE configuration** (`.bob/`) - custom modes, rules, and
+   skills that make Bob read `.bob/knowledge/` on entry and write
    structured stage artifacts on exit, instead of leaving context in
    scrollback.
 2. **CLI** (`cli/`) - scaffolds task directories, appends to the event log,
@@ -64,8 +64,8 @@ See `docs/architecture.md` for the full diagram.
 ## Repo layout
 
 ```
-.bob/            Bob IDE config: custom modes, rules, skills; .bob/relay/ is
-                 Relay's own isolated subfolder (this repo's dogfooded task)
+.bob/            Bob IDE config plus Relay's own baton (tasks/, knowledge/,
+                 metrics/, config.yml) - this repo's dogfooded task data
 cli/             relay CLI - scaffold, events, compile, report, doctor,
                  dashboard (bundled pre-built React app in dashboard-dist/)
 bob-sessions/    required Bob session-summary screenshots
@@ -103,7 +103,7 @@ npm install -g bob-relay
 relay start "<title>"
 ```
 
-`relay start` does everything: scaffolds `.bob/relay/` (Bob IDE modes,
+`relay start` does everything: scaffolds `.bob/` (Bob IDE modes,
 rules, skills, config, knowledge stubs, empty metrics log) if it doesn't
 exist yet - leaving the rest of an existing `.bob/` untouched - creates and
 activates a task, compiles it, and opens the visual dashboard in your
@@ -111,7 +111,7 @@ browser. The only thing left for you to do is open this repo in Bob IDE and
 switch to the Relay Onboard mode. `--no-dashboard` skips the compile+dashboard
 step, `--no-open` starts the dashboard without launching a browser tab, and
 `--port <n>` picks a different port. `relay init` refuses to touch an
-existing `.bob/relay/` unless you pass `--force`, which still never
+existing `.bob/` unless you pass `--force`, which still never
 overwrites real tasks or harvested knowledge.
 
 Prefer not to install globally? `npx bob-relay init` works for a single
@@ -123,7 +123,7 @@ with `npm install --save-dev bob-relay` in the project before relying on
 
 ## CLI reference
 
-All commands operate on the `.bob/relay/` baton in the current working
+All commands operate on the `.bob/` baton in the current working
 directory. Run `relay <command> --help` for the exhaustive, always-current
 flag list - this table is a summary.
 
@@ -131,16 +131,16 @@ flag list - this table is a summary.
 
 | Command                                                                                                                                                           | What it does                                                                                                                                                                          |
 | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `relay start <title> [--source-type ticket\|issue\|adhoc] [--source-ref <ref>] [--baseline] [--tag <tag>] [--port <port>] [--no-dashboard] [--no-open] [--force]` | Quickstart: runs `init` if `.bob/relay/` doesn't exist yet, creates and activates a task, compiles, and opens the dashboard - everything short of opening Bob.                        |
-| `relay init [--force]`                                                                                                                                            | Scaffolds `.bob/relay/` if absent (idempotent), leaving the rest of an existing `.bob/` untouched. `--force` re-scaffolds it, but never overwrites real tasks or harvested knowledge. |
+| `relay start <title> [--source-type ticket\|issue\|adhoc] [--source-ref <ref>] [--baseline] [--tag <tag>] [--port <port>] [--no-dashboard] [--no-open] [--force]` | Quickstart: runs `init` if `.bob/` doesn't exist yet, creates and activates a task, compiles, and opens the dashboard - everything short of opening Bob.                        |
+| `relay init [--force]`                                                                                                                                            | Scaffolds `.bob/` if absent (idempotent), leaving the rest of an existing `.bob/` untouched. `--force` re-scaffolds it, but never overwrites real tasks or harvested knowledge. |
 | `relay dashboard [--port <port>] [--no-open]`                                                                                                                     | Serves the visual dashboard against this project's compiled data, using the build bundled in the npm package.                                                                         |
 
 ### Tasks
 
 | Command                                                                                                            | What it does                                                                                                                                                                                                                                        |
 | ------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `relay task new <title> [--source-type ticket\|issue\|adhoc] [--source-ref <ref>] [--baseline] [--tag <tag>]`      | Creates a new `.bob/relay/tasks/T-NNN-<slug>/` directory + `task.json`. `--baseline` marks it as a manual (non-Relay) run for comparison. `--tag` is repeatable.                                                                                    |
-| `relay task use <id>`                                                                                              | Sets the active task (writes `.bob/relay/.active`). Accepts the full id or the numeric prefix.                                                                                                                                                      |
+| `relay task new <title> [--source-type ticket\|issue\|adhoc] [--source-ref <ref>] [--baseline] [--tag <tag>]`      | Creates a new `.bob/tasks/T-NNN-<slug>/` directory + `task.json`. `--baseline` marks it as a manual (non-Relay) run for comparison. `--tag` is repeatable.                                                                                    |
+| `relay task use <id>`                                                                                              | Sets the active task (writes `.bob/.active`). Accepts the full id or the numeric prefix.                                                                                                                                                      |
 | `relay task list [--tag <tag>]`                                                                                    | Lists tasks, newest first; optionally filtered by tag.                                                                                                                                                                                              |
 | `relay task estimate [--task <id>] [--method ai-estimated --total-sec <n> [--per-stage <spec>] [--based-on <id>]]` | (Re)computes the estimated manual-completion baseline. With no `--method`, recomputes the automatic fallback tiers (historical average, then a hardcoded default). `--method ai-estimated` records the brief stage's LLM-produced estimate instead. |
 | `relay task tag add <tags...> [--task <id>]`                                                                       | Adds one or more tags to a task (defaults to the active task).                                                                                                                                                                                      |
@@ -178,25 +178,25 @@ debug, test, review, pr, docs`.
 
 | Command                                                           | What it does                                                                                                                                                                         |
 | ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `relay harvest <gotchaId> [--task <id>] [--mode relay\|baseline]` | Records that a knowledge entry (from `.bob/relay/knowledge/gotchas.md`) was harvested for the current task, closing the flywheel loop.                                               |
-| `relay compile [--watch]`                                         | Compiles `.bob/relay/` into the dashboard's data file. `--watch` recompiles on any change under `.bob/relay/` (uses `fs.watch` recursive - see Troubleshooting for platform limits). |
+| `relay harvest <gotchaId> [--task <id>] [--mode relay\|baseline]` | Records that a knowledge entry (from `.bob/knowledge/gotchas.md`) was harvested for the current task, closing the flywheel loop.                                               |
+| `relay compile [--watch]`                                         | Compiles `.bob/` into the dashboard's data file. `--watch` recompiles on any change under `.bob/` (uses `fs.watch` recursive - see Troubleshooting for platform limits). |
 | `relay report [--json] [--markdown] [--strict]`                   | Prints the baseline-vs-relay comparison. `--strict` exits non-zero if any comparison is incomplete (useful in CI).                                                                   |
-| `relay status [--task <id>]`                                      | Prints the active task's summary (defaults to whatever `.bob/relay/.active` points at).                                                                                              |
-| `relay doctor`                                                    | Sanity-checks `.bob/relay/` config against its own baton and the `gotchas.md` parser. Run this whenever something in the pipeline "doesn't feel wired up."                           |
+| `relay status [--task <id>]`                                      | Prints the active task's summary (defaults to whatever `.bob/.active` points at).                                                                                              |
+| `relay doctor`                                                    | Sanity-checks `.bob/` config against its own baton and the `gotchas.md` parser. Run this whenever something in the pipeline "doesn't feel wired up."                           |
 
 ## Bob IDE modes
 
-`.bob/relay/custom_modes.yaml` defines one custom mode per Relay stage (plus
+`.bob/custom_modes.yaml` defines one custom mode per Relay stage (plus
 two stages that intentionally use Bob's own built-in modes). Each mode's
-detailed behavior lives in `.bob/relay/rules-<slug>/`, loaded automatically
+detailed behavior lives in `.bob/rules-<slug>/`, loaded automatically
 by Bob when that mode is active.
 
 | Stage     | Mode                            | Built-in or custom | What it does                                                                                                                                        |
 | --------- | ------------------------------- | ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| onboard   | `relay-onboard` (Relay Onboard) | custom             | Reads the knowledge base first, explores the codebase, writes architecture notes. Edit access limited to `.bob/relay/knowledge/` and `AGENTS.md`.   |
+| onboard   | `relay-onboard` (Relay Onboard) | custom             | Reads the knowledge base first, explores the codebase, writes architecture notes. Edit access limited to `.bob/knowledge/` and `AGENTS.md`.   |
 | brief     | `relay-brief` (📋 Relay Brief)  | custom             | Extracts acceptance criteria from a source ticket into `task.json`. Flags vague requirements instead of silently interpreting them.                 |
 | plan      | Bob's built-in **Plan mode**    | built-in           | Produces `02-plan.md`, including rejected alternatives.                                                                                             |
-| implement | Bob's built-in **Agent mode**   | built-in           | Writes the code; reads/writes `.bob/relay/` files directly.                                                                                         |
+| implement | Bob's built-in **Agent mode**   | built-in           | Writes the code; reads/writes `.bob/` files directly.                                                                                         |
 | debug     | `relay-debug` ( Relay Debug)    | custom             | Root-causes a bug and harvests a gotcha into the knowledge base - a fix without a harvested gotcha is treated as an incomplete session.             |
 | test      | `relay-test` ( Relay Test)      | custom             | Writes one test per testable criterion and per debug note; marks coverage honestly (never marks something covered just because it was implemented). |
 | review    | `relay-review` (Relay Review)   | custom             | Four distinct passes: plan conformance, criteria coverage, gotcha avoidance, conventions. Every finding needs a file:line and a suggested fix.      |
@@ -236,11 +236,11 @@ hand; use `relay stage start/end/skip/cancel/manual`.
 
 ### Skills
 
-`.bob/relay/skills/` holds stage-specific workflows Bob can invoke: `doctor`,
+`.bob/skills/` holds stage-specific workflows Bob can invoke: `doctor`,
 `relay-baton` (reading/writing the baton files), `relay-criteria`
 (acceptance-criteria extraction), `relay-harvest` (the exact gotcha template
 `compile.ts`'s parser expects), `relay-create-pr`, and `relay-doctor` (wraps
-`relay doctor`). `.bob/relay/commands/` exposes some of these as Bob slash
+`relay doctor`). `.bob/commands/` exposes some of these as Bob slash
 commands.
 
 ## Built with IBM Bob 2.0
@@ -248,11 +248,11 @@ commands.
 Relay is built using, and built _for_, Bob:
 
 - **Agent mode** - drives `implement` and `debug`, reading/writing
-  `.bob/relay/` files directly.
+  `.bob/` files directly.
 - **Plan mode** - produces `02-plan.md`, including rejected alternatives, so
   that context doesn't die before review.
 - **Custom modes** - one per pipeline stage, each scoped to read the right
-  `.bob/relay/` inputs and write the right stage artifact.
+  `.bob/` inputs and write the right stage artifact.
 - **Rules** - enforce the baton contract: every stage must read prior
   context and write its artifact before advancing.
 - **Skills** - stage-specific workflows: acceptance-criteria extraction,
@@ -272,10 +272,10 @@ tells you exactly what's broken and (where possible) how to fix it.
 | ------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `relay: command not found` / `npx relay` fails                | Not installed globally, and `bob-relay` isn't a local dependency yet - `npx relay` then resolves an unrelated `relay` package from the registry instead of this one                                                                                                                                   | `npm install -g bob-relay` (or `npm install --save-dev bob-relay` in the project), then plain `relay <command>` works. In this monorepo specifically: `npm run build --workspace cli`, or call `node cli/dist/index.js <command>` directly. |
 | `MODULE_NOT_FOUND` running a script                           | Wrong invocation path/cwd                                                                                                                                                                                                                                                                             | Run from the repo root, not a subdirectory, unless the doc you're following says otherwise.                                                                                                                                                 |
-| A stage's mode "isn't wired up" in Bob                        | `custom_modes.yaml` missing the slug, or no matching `.bob/relay/rules-<slug>/` directory                                                                                                                                                                                                             | `relay doctor`'s "every stage has a mode or rules file" check reports the exact stage/mode pair; add the missing mode entry or rules directory.                                                                                             |
-| A rule/skill references a file that doesn't exist             | Stale path in a `.bob/relay/` Markdown file                                                                                                                                                                                                                                                           | `relay doctor`'s "every referenced path exists or is stage-created" check lists the bad reference and the file it's in.                                                                                                                     |
-| `relay status`/stage commands act on the wrong task           | `.bob/relay/.active` is empty, stale, or doesn't match any task directory                                                                                                                                                                                                                             | `relay doctor`'s "`.bob/relay/.active` resolves" check confirms this; fix with `relay task use <id>`.                                                                                                                                       |
-| Bob can't see `.bob/relay/` files at all                      | `.bobignore` excludes `.bob/relay/`                                                                                                                                                                                                                                                                   | `relay doctor`'s "`.bobignore` does not exclude `.bob/relay/`" check catches this - remove the excluding rule. `.bob/relay/` must never be gitignored or bobignored; it's the product.                                                      |
+| A stage's mode "isn't wired up" in Bob                        | `custom_modes.yaml` missing the slug, or no matching `.bob/rules-<slug>/` directory                                                                                                                                                                                                             | `relay doctor`'s "every stage has a mode or rules file" check reports the exact stage/mode pair; add the missing mode entry or rules directory.                                                                                             |
+| A rule/skill references a file that doesn't exist             | Stale path in a `.bob/` Markdown file                                                                                                                                                                                                                                                           | `relay doctor`'s "every referenced path exists or is stage-created" check lists the bad reference and the file it's in.                                                                                                                     |
+| `relay status`/stage commands act on the wrong task           | `.bob/.active` is empty, stale, or doesn't match any task directory                                                                                                                                                                                                                             | `relay doctor`'s "`.bob/.active` resolves" check confirms this; fix with `relay task use <id>`.                                                                                                                                       |
+| Bob can't see `.bob/` files at all                      | `.bobignore` excludes `.bob/`                                                                                                                                                                                                                                                                   | `relay doctor`'s "`.bobignore` does not exclude `.bob/`" check catches this - remove the excluding rule. `.bob/` must never be gitignored or bobignored; it's the product.                                                      |
 | A harvested gotcha never shows up in `relay compile`'s output | `gotchas.md` entry doesn't match the exact format `compile.ts`'s parser expects (`## gotcha-NNN - Title` heading, then `- **field:** value` bullets in exact order, including `discoveredIn`, `discoveredAt`, `costMinutes`, `symptom`, `rootCause`, `fix`, `watchOut`, `codeRefs`, `stalenessCheck`) | `relay doctor`'s "gotcha format matches compile.ts parser" check names the missing field; activate the `relay-harvest` skill for the exact template rather than hand-writing the entry.                                                     |
 | A stage is stuck showing `running` forever                    | A Bob session crashed/was killed mid-stage                                                                                                                                                                                                                                                            | `relay recover` lists any stage running past the timeout (`config.yml`, default 30m); `relay recover --yes` cancels/restores it. `relay doctor` also flags this.                                                                            |
 | Dashboard shows stale or missing data                         | The compiled data file wasn't recompiled, or its `schemaVersion` is out of date                                                                                                                                                                                                                       | Run `relay compile`. `relay doctor`'s last check verifies the file exists and its `schemaVersion` matches `cli/src/types.ts`'s `SCHEMA_VERSION`.                                                                                            |
