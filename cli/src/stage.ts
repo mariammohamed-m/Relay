@@ -5,7 +5,11 @@ import { readFile } from "node:fs/promises";
 import { resolveActiveTask } from "./active.js";
 import { atomicWrite, saveTask, listDirs, readTask } from "./fsutil.js";
 import { appendEvent } from "./events.js";
-import { STAGE_ARTIFACT, stubArtifactContent, isStubContent } from "./stageArtifact.js";
+import {
+  STAGE_ARTIFACT,
+  stubArtifactContent,
+  isStubContent,
+} from "./stageArtifact.js";
 import { takeSnapshot, readLatestSnapshot } from "./history.js";
 import { loadConfig, recoveryTimeoutMinutes, tasksDir } from "./paths.js";
 import {
@@ -28,7 +32,7 @@ function assertStage(stage: string): asserts stage is StageId {
 /**
  * Produces a compact plain-text change summary by comparing two strings.
  * Returns a one-line count plus up to 3 representative changed lines.
- * Never does an LLM call — purely a string diff.
+ * Never does an LLM call - purely a string diff.
  */
 function computeChangeSummary(oldText: string, newText: string): string {
   const oldLines = oldText.split("\n");
@@ -173,7 +177,13 @@ export async function cmdStageStart(
     console.warn(
       `warning: stage "${abandoned}" was still running - treating it as abandoned and recovering it.`,
     );
-    const result = await cancelAndRestore(dir, task, abandoned, "abandoned", mode);
+    const result = await cancelAndRestore(
+      dir,
+      task,
+      abandoned,
+      "abandoned",
+      mode,
+    );
     console.warn(`  -> ${abandoned}: ${result.detail}`);
   }
 
@@ -293,7 +303,11 @@ async function finishStage(
   // the new artifact content that was just written.
   // -----------------------------------------------------------------------
   const visitCount = record.visitCount ?? 1;
-  if (visitCount > 1 && Array.isArray(record.history) && record.history.length > 0) {
+  if (
+    visitCount > 1 &&
+    Array.isArray(record.history) &&
+    record.history.length > 0
+  ) {
     const lastVisit = record.history[record.history.length - 1];
     const newContent = await readCurrentArtifact(dir, stageArg);
     if (lastVisit.artifactSnapshot !== null && newContent !== null) {
@@ -315,7 +329,9 @@ async function finishStage(
       visitNumber: visitCount,
       changeSummary,
     });
-    console.log(`${task.id}: ${stageArg} amended (visit ${visitCount}) - ${changeSummary}`);
+    console.log(
+      `${task.id}: ${stageArg} amended (visit ${visitCount}) - ${changeSummary}`,
+    );
   }
 
   await saveTask(path.join(dir, "task.json"), task);
@@ -372,7 +388,9 @@ async function promptMinutes(stageArg: StageId): Promise<number> {
     );
     const minutes = Number(answer.trim());
     if (!Number.isFinite(minutes) || minutes < 0) {
-      throw new Error(`Invalid duration "${answer}" - expected a non-negative number of minutes.`);
+      throw new Error(
+        `Invalid duration "${answer}" - expected a non-negative number of minutes.`,
+      );
     }
     return minutes;
   } finally {
@@ -413,7 +431,8 @@ export async function cmdStageManual(
   }
 
   const startedAt =
-    opts.startedAt ?? new Date(Date.parse(completedAt) - durationSec * 1000).toISOString();
+    opts.startedAt ??
+    new Date(Date.parse(completedAt) - durationSec * 1000).toISOString();
 
   const { durationSec: finalDurationSec, artifact } = await finishStage(
     dir,
@@ -481,7 +500,12 @@ export async function cmdRecover(opts: { yes?: boolean }): Promise<void> {
   const timeoutMinutes = recoveryTimeoutMinutes(cfg);
 
   const dirs = await listDirs(tasksDir());
-  const stuck: { dir: string; task: Task; stage: StageId; minutesRunning: number }[] = [];
+  const stuck: {
+    dir: string;
+    task: Task;
+    stage: StageId;
+    minutesRunning: number;
+  }[] = [];
 
   for (const d of dirs) {
     const full = path.join(tasksDir(), d);
@@ -494,7 +518,8 @@ export async function cmdRecover(opts: { yes?: boolean }): Promise<void> {
     for (const stage of STAGES) {
       const record = task.stages[stage];
       if (record.status !== "running" || !record.startedAt) continue;
-      const minutesRunning = (Date.now() - Date.parse(record.startedAt)) / 60000;
+      const minutesRunning =
+        (Date.now() - Date.parse(record.startedAt)) / 60000;
       if (minutesRunning > timeoutMinutes) {
         stuck.push({ dir: full, task, stage, minutesRunning });
       }
@@ -506,7 +531,9 @@ export async function cmdRecover(opts: { yes?: boolean }): Promise<void> {
     return;
   }
 
-  console.log(`Found ${stuck.length} stage(s) stuck running past ${timeoutMinutes}m:`);
+  console.log(
+    `Found ${stuck.length} stage(s) stuck running past ${timeoutMinutes}m:`,
+  );
   for (const s of stuck) {
     console.log(
       `  ${s.task.id}: ${s.stage} running for ${Math.round(s.minutesRunning)}m`,
@@ -519,7 +546,13 @@ export async function cmdRecover(opts: { yes?: boolean }): Promise<void> {
   }
 
   for (const s of stuck) {
-    const result = await cancelAndRestore(s.dir, s.task, s.stage, "timeout", s.task.mode);
+    const result = await cancelAndRestore(
+      s.dir,
+      s.task,
+      s.stage,
+      "timeout",
+      s.task.mode,
+    );
     console.log(`  -> ${s.task.id}: ${s.stage}: ${result.detail}`);
   }
 }

@@ -1,6 +1,6 @@
 # bob-relay
 
-The CLI for Relay — carries structured context (the "baton") between the
+The CLI for Relay - carries structured context (the "baton") between the
 stages of a dev workflow: onboard, brief, plan, implement, debug, test,
 review, pr, docs. It scaffolds and manages `.bob/relay/` (Relay's own
 subfolder inside your project's `.bob/` config); nothing else needs a server

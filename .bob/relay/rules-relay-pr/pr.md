@@ -10,16 +10,15 @@ baton and hand off.
 
 1. `npx relay stage start pr`.
 
-2. **Conflict check — do this before writing anything.**
+2. **Conflict check - do this before writing anything.**
    Run: `npx relay pr check-conflicts`
    (add `--base <branch>` if the target branch isn't `main`).
-
    - If the command exits non-zero (conflicts found), **stop**. Do not
      proceed to write `07-pr.md` or open a PR. Instead:
      a. Tell the user exactly which files are conflicted (the command
-        lists them).
+     lists them).
      b. Ask the user to decide: fix conflicts on the branch first, or
-        document them explicitly in the PR for the reviewer to resolve.
+     document them explicitly in the PR for the reviewer to resolve.
      c. Wait for the user's instruction before continuing.
    - If the command exits zero (no conflicts), continue to step 3.
 
@@ -29,7 +28,7 @@ baton and hand off.
    therefore surfaced here, before `07-pr.md` is written, so the user has a
    clear decision point before they ever invoke the PR command. This is the
    "embed results and let the user decide" approach described in the task
-   spec — not auto-resolution.
+   spec - not auto-resolution.
 
 3. Write `07-pr.md`:
    - If **conflicts were found** (and the user chose to document rather than

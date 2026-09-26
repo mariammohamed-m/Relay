@@ -91,14 +91,14 @@ export interface StageRecord {
   /**
    * How many times `stage start` has been called for this stage (0 = never
    * started, 1 = started once, 2+ = revisited). Incremented on every
-   * `stage start`. Absent on old task.json files — {@link readTask} fills in
+   * `stage start`. Absent on old task.json files - {@link readTask} fills in
    * the compat default (1 for done/skipped/failed stages, 0 for pending).
    */
   visitCount?: number;
   /**
    * Every completed or abandoned visit prior to the current one. Each entry
    * captures the artifact content at that point so history is never lost.
-   * Absent on old task.json files — {@link readTask} fills in `[]`.
+   * Absent on old task.json files - {@link readTask} fills in `[]`.
    */
   history?: StageVisit[];
   /**
@@ -298,7 +298,10 @@ export interface Task {
 }
 
 /** Which tier produced an {@link EstimatedBaseline} - shown in the UI so a fallback average is never mistaken for a ticket-specific estimate. */
-export type EstimationMethod = "ai-estimated" | "historical-average" | "default-fallback";
+export type EstimationMethod =
+  | "ai-estimated"
+  | "historical-average"
+  | "default-fallback";
 
 /**
  * Estimated manual completion time for a task, used as the baseline Relay

@@ -24,10 +24,10 @@ and surface one good first task.
    that file belongs to `relay-debug`/`relay-docs`.
 5. Write the artifact **`.relay/tasks/<task-id>/00-onboard.md`** (resolve
    `<task-id>` from `.relay/.active`). This file is the primary deliverable
-   of the onboard stage — do not put this content only in chat. It must
+   of the onboard stage - do not put this content only in chat. It must
    contain: per-subsystem summary (what each subsystem does, key files,
    sharp edges/gotchas), and the one suggested first task. Keep it factual
-   and skimmable — bullets and short paragraphs, not prose narration.
+   and skimmable - bullets and short paragraphs, not prose narration.
 6. Suggest that same first task in your final chat message (one sentence
    pointing at the file for full detail).
 7. `npx relay stage end onboard`, then `npx relay compile`.
