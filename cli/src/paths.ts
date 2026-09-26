@@ -1,8 +1,6 @@
-// Resolves .bob/relay/ paths relative to cwd (the CLI is always run from repo
-// root) and loads config.yml for the dashboard output path. Relay's own data
-// and Bob config (modes/rules/skills/commands) both live under .bob/relay/ -
-// a single subpackage folder inside the developer's existing .bob/, so
-// `relay init` never has to touch (or risk clobbering) anything else there.
+// Resolves .bob/ paths relative to cwd (the CLI is always run from repo
+// root) and loads config.yml for the dashboard output path. Relay owns
+// .bob/ directly - `relay init` writes and overwrites it wholesale.
 //
 // These are functions, not module-level constants: computing them once at
 // import time would freeze them to whatever cwd was active when the module
@@ -13,7 +11,7 @@ import { readFile } from 'node:fs/promises';
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml';
 import { atomicWrite } from './fsutil.js';
 
-export const relayRoot = (): string => path.join(process.cwd(), '.bob', 'relay');
+export const relayRoot = (): string => path.join(process.cwd(), '.bob');
 export const tasksDir = (): string => path.join(relayRoot(), 'tasks');
 export const knowledgeDir = (): string => path.join(relayRoot(), 'knowledge');
 export const gotchasFile = (): string => path.join(knowledgeDir(), 'gotchas.md');

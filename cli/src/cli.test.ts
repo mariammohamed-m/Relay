@@ -1,5 +1,5 @@
 // Test suite for the Relay CLI. Uses node:test with a scratch cwd per test
-// so nothing touches the real .bob/relay/ fixture.
+// so nothing touches the real .bob/ fixture.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { mkdtempSync, rmSync, readFileSync, appendFileSync } from "node:fs";
@@ -31,7 +31,6 @@ test("task new produces a task.json satisfying the Task shape", async () => {
     const dir = path.join(
       process.cwd(),
       ".bob",
-      "relay",
       "tasks",
       "T-000-fix-the-thing",
     );
@@ -61,7 +60,6 @@ test("start scaffolds, creates, activates, and compiles a task in one call", asy
     const dir = path.join(
       process.cwd(),
       ".bob",
-      "relay",
       "tasks",
       "T-000-fix-the-thing",
     );
@@ -69,14 +67,14 @@ test("start scaffolds, creates, activates, and compiles a task in one call", asy
     assert.equal(task.id, "T-000");
 
     const active = readFileSync(
-      path.join(process.cwd(), ".bob", "relay", ".active"),
+      path.join(process.cwd(), ".bob", ".active"),
       "utf8",
     ).trim();
     assert.equal(active, "T-000");
 
     const compiled = JSON.parse(
       readFileSync(
-        path.join(process.cwd(), ".bob", "relay", "relay-data.json"),
+        path.join(process.cwd(), ".bob", "relay-data.json"),
         "utf8",
       ),
     );
@@ -98,7 +96,6 @@ test("stage start/end produce correct durations and update state", async () => {
     const dir = path.join(
       process.cwd(),
       ".bob",
-      "relay",
       "tasks",
       "T-000-widget",
     );
@@ -108,7 +105,7 @@ test("stage start/end produce correct durations and update state", async () => {
     assert.equal(task.stages.plan.artifact, "02-plan.md");
 
     const events = readFileSync(
-      path.join(process.cwd(), ".bob", "relay", "metrics", "events.jsonl"),
+      path.join(process.cwd(), ".bob", "metrics", "events.jsonl"),
       "utf8",
     )
       .trim()
@@ -119,6 +116,14 @@ test("stage start/end produce correct durations and update state", async () => {
     );
     assert.ok(
       events.some((e: any) => e.event === "stage_end" && e.stage === "plan"),
+    );
+
+    const compiled = JSON.parse(
+      readFileSync(path.join(process.cwd(), ".bob", "relay-data.json"), "utf8"),
+    );
+    assert.equal(
+      compiled.tasks.find((t: any) => t.id === "T-000").stages.plan.status,
+      "done",
     );
   });
 });
@@ -135,7 +140,6 @@ test("out-of-order stage end warns but does not crash", async () => {
     const dir = path.join(
       process.cwd(),
       ".bob",
-      "relay",
       "tasks",
       "T-000-widget",
     );
@@ -175,7 +179,7 @@ test("a malformed events.jsonl line is skipped and compilation still succeeds", 
     await cmdTaskNew("Widget", { sourceType: "adhoc" });
 
     appendFileSync(
-      path.join(process.cwd(), ".bob", "relay", "metrics", "events.jsonl"),
+      path.join(process.cwd(), ".bob", "metrics", "events.jsonl"),
       "not json at all\n",
     );
 
@@ -184,7 +188,7 @@ test("a malformed events.jsonl line is skipped and compilation still succeeds", 
   });
 });
 
-test("doctor passes all checks against the repo's real .bob/relay/ config", async () => {
+test("doctor passes all checks against the repo's real .bob/ config", async () => {
   const repoRoot = path.resolve(
     path.dirname(fileURLToPath(import.meta.url)),
     "..",
@@ -219,9 +223,9 @@ test("doctor flags a stage with no mode and no rules directory", async () => {
     const { cmdInit, cmdTaskNew } = await import("./scaffold.js");
     await cmdInit({});
     await cmdTaskNew("Widget", { sourceType: "adhoc" });
-    // cmdInit scaffolds .bob/relay/ from templates - remove one stage's rules dir
+    // cmdInit scaffolds .bob/ from templates - remove one stage's rules dir
     // so doctor has something to flag.
-    rmSync(path.join(process.cwd(), ".bob", "relay", "rules-relay-debug"), {
+    rmSync(path.join(process.cwd(), ".bob", "rules-relay-debug"), {
       recursive: true,
       force: true,
     });
@@ -235,64 +239,61 @@ test("doctor flags a stage with no mode and no rules directory", async () => {
   });
 });
 
-test("doctor flags .bobignore excluding .bob/relay/", async () => {
+test("doctor flags .bobignore excluding .bob/", async () => {
   await withScratchCwd(async () => {
     const { cmdInit } = await import("./scaffold.js");
     await cmdInit({});
     const { writeFileSync } = await import("node:fs");
     writeFileSync(
       path.join(process.cwd(), ".bobignore"),
-      "node_modules/\n.bob/relay/\n",
+      "node_modules/\n.bob/\n",
     );
 
     const { runDoctor } = await import("./doctor.js");
     const results = await runDoctor();
     const ignoreCheck = results.find(
-      (r) => r.name === ".bobignore does not exclude .bob/relay/",
+      (r) => r.name === ".bobignore does not exclude .bob/",
     );
     assert.equal(ignoreCheck?.pass, false);
   });
 });
 
-test("init never touches an existing .bob/ outside .bob/relay/, and warns when one is found", async () => {
+test("init refuses to overwrite an existing .bob/ without --force, and merges in with --force", async () => {
   await withScratchCwd(async () => {
-    const { mkdirSync, writeFileSync, readFileSync } = await import("node:fs");
+    const { mkdirSync, writeFileSync, readFileSync, existsSync } = await import("node:fs");
     // Simulate a developer's own pre-existing .bob/ config, unrelated to Relay.
     mkdirSync(path.join(process.cwd(), ".bob", "rules-my-own-mode"), {
       recursive: true,
     });
     writeFileSync(
-      path.join(process.cwd(), ".bob", "custom_modes.yaml"),
-      "customModes:\n  - slug: my-own-mode\n",
+      path.join(process.cwd(), ".bob", "my-own-file.yaml"),
+      "custom: true\n",
     );
 
-    const warnings: string[] = [];
-    const origWarn = console.warn;
-    console.warn = (...args: unknown[]) => warnings.push(args.join(" "));
-    try {
-      const { cmdInit } = await import("./scaffold.js");
-      await cmdInit({});
-    } finally {
-      console.warn = origWarn;
-    }
+    const { cmdInit } = await import("./scaffold.js");
 
-    // The developer's own files are untouched.
+    // Without --force, init refuses rather than overwrite.
+    await cmdInit({});
+    assert.ok(
+      !existsSync(path.join(process.cwd(), ".bob", "custom_modes.yaml")),
+    );
+    process.exitCode = 0;
+
+    // With --force, Relay's own files are installed alongside the developer's.
+    await cmdInit({ force: true });
     assert.equal(
+      readFileSync(
+        path.join(process.cwd(), ".bob", "my-own-file.yaml"),
+        "utf8",
+      ),
+      "custom: true\n",
+    );
+    assert.ok(
       readFileSync(
         path.join(process.cwd(), ".bob", "custom_modes.yaml"),
         "utf8",
-      ),
-      "customModes:\n  - slug: my-own-mode\n",
-    );
-    // Relay's own subpackage was still installed, isolated in .bob/relay/.
-    assert.ok(
-      readFileSync(
-        path.join(process.cwd(), ".bob", "relay", "custom_modes.yaml"),
-        "utf8",
       ).length > 0,
     );
-    // A warning was surfaced about the pre-existing .bob/.
-    assert.ok(warnings.some((w) => w.includes("existing .bob/")));
   });
 });
 
@@ -309,7 +310,6 @@ test("tags are normalized, deduped, and sorted; updatedAt is set on every write"
     const file = path.join(
       process.cwd(),
       ".bob",
-      "relay",
       "tasks",
       "T-000-widget",
       "task.json",
@@ -375,7 +375,6 @@ test("compile/reads tolerate a task.json missing tags and updatedAt", async () =
     const file = path.join(
       process.cwd(),
       ".bob",
-      "relay",
       "tasks",
       "T-000-widget",
       "task.json",
@@ -404,7 +403,6 @@ test("stage start snapshots the artifact only when it has real content", async (
     const dir = path.join(
       process.cwd(),
       ".bob",
-      "relay",
       "tasks",
       "T-000-widget",
     );
@@ -437,7 +435,6 @@ test("snapshot pruning keeps only the 5 most recent per stage", async () => {
     const dir = path.join(
       process.cwd(),
       ".bob",
-      "relay",
       "tasks",
       "T-000-widget",
     );
@@ -461,7 +458,6 @@ test("cancel with a snapshot restores the artifact and task.json exactly", async
     const dir = path.join(
       process.cwd(),
       ".bob",
-      "relay",
       "tasks",
       "T-000-widget",
     );
@@ -496,7 +492,6 @@ test("cancel without a usable snapshot sets the stage to failed with a stub arti
     const dir = path.join(
       process.cwd(),
       ".bob",
-      "relay",
       "tasks",
       "T-000-widget",
     );
@@ -529,7 +524,6 @@ test("starting a new stage auto-cancels a different stage left running", async (
     const dir = path.join(
       process.cwd(),
       ".bob",
-      "relay",
       "tasks",
       "T-000-widget",
     );
@@ -542,7 +536,7 @@ test("starting a new stage auto-cancels a different stage left running", async (
     assert.equal(task.stages.plan.status, "running");
 
     const events = readFileSync(
-      path.join(process.cwd(), ".bob", "relay", "metrics", "events.jsonl"),
+      path.join(process.cwd(), ".bob", "metrics", "events.jsonl"),
       "utf8",
     )
       .trim()
@@ -568,7 +562,6 @@ test("recover respects the configured timeout", async () => {
     const dir = path.join(
       process.cwd(),
       ".bob",
-      "relay",
       "tasks",
       "T-000-widget",
     );
@@ -610,7 +603,6 @@ test("a failed stage re-run via stage start clears the failure", async () => {
     const dir = path.join(
       process.cwd(),
       ".bob",
-      "relay",
       "tasks",
       "T-000-widget",
     );
@@ -669,7 +661,6 @@ test("stage revisit increments visitCount, pushes history entry, and marks downs
     const dir = path.join(
       process.cwd(),
       ".bob",
-      "relay",
       "tasks",
       "T-000-revisit-test",
     );
@@ -743,7 +734,7 @@ test("stage revisit increments visitCount, pushes history entry, and marks downs
 
     // Events: revisit_detected and stage_amended should be present.
     const events = readFileSync(
-      path.join(process.cwd(), ".bob", "relay", "metrics", "events.jsonl"),
+      path.join(process.cwd(), ".bob", "metrics", "events.jsonl"),
       "utf8",
     )
       .trim()
@@ -775,7 +766,6 @@ test("re-running test after implement revisit clears staleSince and adds its own
     const dir = path.join(
       process.cwd(),
       ".bob",
-      "relay",
       "tasks",
       "T-000-revisit-clear-test",
     );
@@ -834,7 +824,6 @@ test("readTask backfills visitCount and history on old task.json without those f
     const file = path.join(
       process.cwd(),
       ".bob",
-      "relay",
       "tasks",
       "T-000-compat-test",
       "task.json",
@@ -877,7 +866,6 @@ test("report shows visitCount and totalVisitSec for revisited stages", async () 
     const dir = path.join(
       process.cwd(),
       ".bob",
-      "relay",
       "tasks",
       "T-000-report-revisit-test",
     );
@@ -920,7 +908,6 @@ test("task new populates a default-fallback estimatedBaseline; a baseline-mode t
     const dir = path.join(
       process.cwd(),
       ".bob",
-      "relay",
       "tasks",
       "T-000-widget",
     );
@@ -938,7 +925,6 @@ test("task new populates a default-fallback estimatedBaseline; a baseline-mode t
     const baselineDir = path.join(
       process.cwd(),
       ".bob",
-      "relay",
       "tasks",
       "T-001-manual-timing-run",
     );
@@ -966,7 +952,6 @@ test("relay task estimate --method ai-estimated overwrites the placeholder", asy
     const dir = path.join(
       process.cwd(),
       ".bob",
-      "relay",
       "tasks",
       "T-000-widget",
     );

@@ -1,9 +1,9 @@
 # Relay core rules (global - applies to every mode)
 
-- Resolve the active task by reading `.bob/relay/.active` (a task id like
-  `T-000`). Never hardcode a task id. If `.bob/relay/.active` is missing or
+- Resolve the active task by reading `.bob/.active` (a task id like
+  `T-000`). Never hardcode a task id. If `.bob/.active` is missing or
   stale, run `npx relay status` to confirm the right task before acting.
-- Before writing anything, read the relevant files under `.bob/relay/knowledge/`
+- Before writing anything, read the relevant files under `.bob/knowledge/`
   (`gotchas.md`, `architecture.md`, `decisions.md`, `glossary.md`) - don't
   repeat a mistake that's already documented.
 - Write only in the shapes defined by `cli/src/types.ts`. Never invent a

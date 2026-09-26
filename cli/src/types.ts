@@ -1,6 +1,6 @@
 /**
  * Relay data contract - the single source of truth for everything the CLI
- * writes into `.bob/relay/`, everything the dashboard reads back, and everything
+ * writes into `.bob/`, everything the dashboard reads back, and everything
  * the Bob rules files instruct Bob to produce.
  *
  * Changing shapes here ripples into the CLI (Sprint 2), the dashboard
@@ -17,7 +17,7 @@
  * type can never drift apart.
  *
  * `docs` is the terminal stage - it fires after `pr` once the task's
- * knowledge has been harvested into `.bob/relay/knowledge/`.
+ * knowledge has been harvested into `.bob/knowledge/`.
  */
 export const STAGES = [
   "onboard",
@@ -116,7 +116,7 @@ export interface StageRecord {
   /**
    * Full Markdown body of `artifact`, embedded at compile time. The
    * dashboard is a pure reader of the compiled snapshot with no access to
-   * `.bob/relay/` at runtime, so a stage's artifact text has to travel inside
+   * `.bob/` at runtime, so a stage's artifact text has to travel inside
    * `RelayData` itself rather than being fetched separately. Null until the
    * stage completes, or for a stage with no artifact file (`artifact` is
    * also null in that case). Optional (rather than required-nullable like
@@ -127,7 +127,7 @@ export interface StageRecord {
   content?: string | null;
   /**
    * Subagents that ran during this stage, derived from paired
-   * `subagent_start`/`subagent_end` events in `.bob/relay/metrics/events.jsonl`
+   * `subagent_start`/`subagent_end` events in `.bob/metrics/events.jsonl`
    * and embedded at compile time for the same reason {@link content} is:
    * the dashboard reads only the compiled snapshot, never raw events.
    * Omitted (or empty) for a stage that ran no subagents.
@@ -316,12 +316,12 @@ export interface EstimatedBaseline {
   method: EstimationMethod;
   /** ISO 8601 timestamp of when this estimate was produced. */
   estimatedAt: string;
-  /** Id of a past task this estimate was weighted against, when the `ai-estimated` tier found a strong match in `.bob/relay/knowledge/`. */
+  /** Id of a past task this estimate was weighted against, when the `ai-estimated` tier found a strong match in `.bob/knowledge/`. */
   basedOnSimilarTask?: string;
 }
 
 // ---------------------------------------------------------------------------
-// Events (.bob/relay/metrics/events.jsonl)
+// Events (.bob/metrics/events.jsonl)
 // ---------------------------------------------------------------------------
 
 /**
@@ -456,7 +456,7 @@ export type RelayEvent =
   | StageAmendedEvent;
 
 // ---------------------------------------------------------------------------
-// Knowledge base (.bob/relay/knowledge/)
+// Knowledge base (.bob/knowledge/)
 // ---------------------------------------------------------------------------
 
 /**

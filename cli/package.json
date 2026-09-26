@@ -1,7 +1,7 @@
 {
   "name": "bob-relay",
-  "version": "0.5.0",
-  "description": "Relay CLI - scaffolds and manages the .bob/relay/ baton that carries context between dev-workflow stages.",
+  "version": "1.0.1",
+  "description": "Relay CLI - scaffolds and manages the .bob/ baton that carries context between dev-workflow stages.",
   "type": "module",
   "license": "MIT",
   "engines": {

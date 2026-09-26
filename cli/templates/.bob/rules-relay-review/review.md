@@ -3,7 +3,7 @@
 # relay-review
 
 **Read first:** `02-plan.md`, `task.json.acceptanceCriteria`,
-`.bob/relay/knowledge/gotchas.md`, the diff/`filesTouched`.
+`.bob/knowledge/gotchas.md`, the diff/`filesTouched`.
 
 **Job:** four independent checks of the implementation.
 

@@ -1,11 +1,11 @@
 ---
 name: relay-baton
-description: Relay's file conventions and task.json update rules - where each stage writes, what fields it owns, and the CLI commands that log timing. Use whenever writing or updating anything under .bob/relay/tasks/ or .bob/relay/knowledge/.
+description: Relay's file conventions and task.json update rules - where each stage writes, what fields it owns, and the CLI commands that log timing. Use whenever writing or updating anything under .bob/tasks/ or .bob/knowledge/.
 ---
 
 # Relay baton conventions
 
-**Directory:** `.bob/relay/tasks/T-NNN-<slug>/` - one dir per task.
+**Directory:** `.bob/tasks/T-NNN-<slug>/` - one dir per task.
 
 **Stage → artifact filename** (fixed, from `cli/src/stageArtifact.ts`):
 
@@ -18,7 +18,7 @@ description: Relay's file conventions and task.json update rules - where each st
 | test          | `05-tests.md`                                  |
 | review        | `06-review.md`                                 |
 | pr            | `07-pr.md`                                     |
-| onboard, docs | none - they update `.bob/relay/knowledge/` instead |
+| onboard, docs | none - they update `.bob/knowledge/` instead |
 
 Each stage owns exactly one artifact file. Never write into another stage's
 file.

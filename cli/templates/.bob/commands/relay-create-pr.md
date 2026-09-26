@@ -9,8 +9,8 @@ PR body, not just something you paste in by hand.
 
 **Steps:**
 
-1. Resolve the active task from `.bob/relay/.active` - never hardcode it.
-2. Read `.bob/relay/tasks/<task-id>/07-pr.md` in full. This is the PR
+1. Resolve the active task from `.bob/.active` - never hardcode it.
+2. Read `.bob/tasks/<task-id>/07-pr.md` in full. This is the PR
    description, verbatim - do not rewrite, summarize, shorten, or
    "improve" it. If it doesn't exist yet, stop and say the `pr` stage
    hasn't been run.
@@ -24,13 +24,13 @@ PR body, not just something you paste in by hand.
    create the PR with the file's content used exactly as the body, no
    intermediate rewriting step:
    ```
-   gh pr create --title "<title from step 3>" --body-file .bob/relay/tasks/<task-id>/07-pr.md
+   gh pr create --title "<title from step 3>" --body-file .bob/tasks/<task-id>/07-pr.md
    ```
    Confirm with the user before running this - it opens a real PR visible
    to collaborators. Report the PR URL back when done.
 6. **If `gh` isn't available/authenticated**, fall back to Bob's built-in
    `/create-pull-request` and let it generate its own description. Once
-   the PR is open, overwrite `.bob/relay/tasks/<task-id>/07-pr.md` with
+   the PR is open, overwrite `.bob/tasks/<task-id>/07-pr.md` with
    whatever title+description Bob actually used, so the artifact stays an
    honest record of what was actually published rather than what was
    drafted. Tell the user you fell back and why.

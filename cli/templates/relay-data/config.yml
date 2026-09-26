@@ -13,10 +13,10 @@ stages:
   - docs
 
 paths:
-  tasks: .bob/relay/tasks
-  knowledge: .bob/relay/knowledge
-  metrics: .bob/relay/metrics/events.jsonl
-  dashboardData: .bob/relay/relay-data.json
+  tasks: .bob/tasks
+  knowledge: .bob/knowledge
+  metrics: .bob/metrics/events.jsonl
+  dashboardData: .bob/relay-data.json
 
 recovery:
   timeoutMinutes: 30

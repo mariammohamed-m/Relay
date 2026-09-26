@@ -1,6 +1,6 @@
 # relay-debug
 
-**Read first:** `03-implementation.md`, `.bob/relay/knowledge/gotchas.md`,
+**Read first:** `03-implementation.md`, `.bob/knowledge/gotchas.md`,
 `@terminal`, `@problems`.
 
 **Job:** find the root cause of a bug and harvest what you learned.
@@ -12,7 +12,7 @@
    makes the symptom go away.
 3. Write `04-debug-notes.md`: symptom, investigation path, root cause, fix,
    approximate time cost.
-4. **Mandatory:** append a new entry to `.bob/relay/knowledge/gotchas.md`,
+4. **Mandatory:** append a new entry to `.bob/knowledge/gotchas.md`,
    matching the `KnowledgeEntry` shape exactly (see the `relay-harvest`
    skill for the exact heading/field format the compiler parses - deviating
    from it means the entry silently fails to compile into the dashboard).

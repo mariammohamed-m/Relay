@@ -35,7 +35,7 @@ import { cmdDashboard } from "./dashboard.js";
 const program = new Command();
 program
   .name("relay")
-  .description("Relay CLI - scaffolds and manages the .bob/relay/ baton.");
+  .description("Relay CLI - scaffolds and manages the .bob/ baton.");
 
 function run(fn: () => Promise<void>): void {
   fn().catch((err: unknown) => {
@@ -46,17 +46,17 @@ function run(fn: () => Promise<void>): void {
 
 program
   .command("init")
-  .description("Scaffold .bob/relay/ (Relay's own subfolder inside .bob/) from the packaged templates.")
+  .description("Scaffold .bob/ from the packaged templates.")
   .option(
     "--force",
-    "overwrite an existing .bob/relay/ (never touches the rest of .bob/, or real tasks/knowledge)",
+    "overwrite an existing .bob/ (never overwrites real tasks/knowledge)",
   )
   .action((opts) => run(() => cmdInit(opts)));
 
 program
   .command("start <title>")
   .description(
-    "Quickstart: scaffolds .bob/relay/ if missing, creates a task, activates it, compiles, and opens the dashboard - the only thing left is switching Bob to onboarding.",
+    "Quickstart: scaffolds .bob/ if missing, creates a task, activates it, compiles, and opens the dashboard - the only thing left is switching Bob to onboarding.",
   )
   .option("--source-type <type>", "ticket|issue|adhoc")
   .option("--source-ref <ref>", "reference within the source system")
@@ -67,7 +67,7 @@ program
   .option("--no-open", "don't auto-open a browser tab for the dashboard")
   .option(
     "--force",
-    "re-scaffold .bob/relay/ even if it already exists (never touches the rest of .bob/, or real tasks/knowledge)",
+    "re-scaffold .bob/ even if it already exists (never overwrites real tasks/knowledge)",
   )
   .action((title, opts) =>
     run(() =>
@@ -249,8 +249,8 @@ program
 
 program
   .command("compile")
-  .description("Compile .bob/relay/ into dashboard/public/relay-data.json.")
-  .option("--watch", "recompile on changes in .bob/relay/")
+  .description("Compile .bob/ into dashboard/public/relay-data.json.")
+  .option("--watch", "recompile on changes in .bob/")
   .action((opts) => run(() => cmdCompile(opts)));
 
 program
@@ -269,7 +269,7 @@ program
 
 program
   .command("doctor")
-  .description("Check .bob/relay/ config against its own baton and the gotchas.md parser.")
+  .description("Check .bob/ config against its own baton and the gotchas.md parser.")
   .action(() => run(() => cmdDoctor()));
 
 program

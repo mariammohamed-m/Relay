@@ -2,9 +2,9 @@
 
 # relay-onboard
 
-**Read first:** `AGENTS.md` (if present), every file in `.bob/relay/knowledge/`.
+**Read first:** `AGENTS.md` (if present), every file in `.bob/knowledge/`.
 
-**Job:** orient on the codebase for the active task (from `.bob/relay/.active`)
+**Job:** orient on the codebase for the active task (from `.bob/.active`)
 and surface one good first task.
 
 **Steps:**
@@ -15,12 +15,12 @@ and surface one good first task.
    available in this mode, spawn one `explore` subagent per top-level
    subsystem; each returns a short section (what it does, key files,
    relevant gotchas). Merge their sections yourself - don't just concatenate.
-4. Update `.bob/relay/knowledge/architecture.md`: add or extend sections for
+4. Update `.bob/knowledge/architecture.md`: add or extend sections for
    what you found, referencing existing gotcha ids (`gotcha-NNN`) wherever
    a subsystem has a known issue. Never rewrite an existing gotcha entry -
    that file belongs to `relay-debug`/`relay-docs`.
-5. Write the artifact **`.bob/relay/tasks/<task-id>/00-onboard.md`** (resolve
-   `<task-id>` from `.bob/relay/.active`). This file is the primary deliverable
+5. Write the artifact **`.bob/tasks/<task-id>/00-onboard.md`** (resolve
+   `<task-id>` from `.bob/.active`). This file is the primary deliverable
    of the onboard stage - do not put this content only in chat. It must
    contain: per-subsystem summary (what each subsystem does, key files,
    sharp edges/gotchas), and the one suggested first task. Keep it factual
@@ -34,7 +34,7 @@ a session is closed/ended/stopped, so the stage will stay stuck at
 `running` unless you handle it yourself. Before you close this session
 without finishing, run `npx relay stage cancel onboard`.
 
-**Artifact:** `.bob/relay/tasks/<task-id>/00-onboard.md`
+**Artifact:** `.bob/tasks/<task-id>/00-onboard.md`
 
 **task.json:** don't touch directly - `stage end` updates `stages.onboard`.
 

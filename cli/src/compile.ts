@@ -1,5 +1,5 @@
-// `relay compile` - reads .bob/relay/tasks/**, .bob/relay/knowledge/**, and
-// .bob/relay/metrics/events.jsonl, and writes dashboard/public/relay-data.json
+// `relay compile` - reads .bob/tasks/**, .bob/knowledge/**, and
+// .bob/metrics/events.jsonl, and writes dashboard/public/relay-data.json
 // matching the RelayData shape in ./types.ts.
 import path from "node:path";
 import { watch } from "node:fs";
@@ -41,7 +41,7 @@ async function readAllTasks(): Promise<CompiledTask[]> {
 }
 
 /**
- * The dashboard reads no raw `.bob/relay/` files at runtime - a done stage's
+ * The dashboard reads no raw `.bob/` files at runtime - a done stage's
  * markdown artifact has to travel inside the compiled snapshot itself
  * (`StageRecord.content`/`artifactMtime`), so this reads every stage's
  * artifact file off disk, embeds its content and mtime, and returns the
@@ -311,7 +311,7 @@ export async function cmdCompile(opts: { watch?: boolean }): Promise<void> {
 
   if (!opts.watch) return;
 
-  console.log("Watching .bob/relay/ for changes... (Ctrl+C to stop)");
+  console.log("Watching .bob/ for changes... (Ctrl+C to stop)");
   let pending = false;
   const recompile = async () => {
     if (pending) return;

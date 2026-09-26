@@ -1,7 +1,7 @@
 # relay-brief
 
 **Read first:** the user-attached ticket (PDF/docx supported), `task.json`,
-relevant `.bob/relay/knowledge/` files.
+relevant `.bob/knowledge/` files.
 
 **Job:** extract testable acceptance criteria for the active task.
 
@@ -13,7 +13,7 @@ relevant `.bob/relay/knowledge/` files.
    and a concrete `ambiguityNote` (a measurable rewrite) for anything vague
    - don't silently interpret it as testable.
 3. Write `01-brief.md`: the criteria table, ambiguity notes, relevant files,
-   related gotchas from `.bob/relay/knowledge/gotchas.md`.
+   related gotchas from `.bob/knowledge/gotchas.md`.
 4. Update `task.json.acceptanceCriteria` to match exactly (all fields
    `covered: false`, `testRef: null` at this stage).
 5. Log extraction: `npx relay criteria list` to confirm, then note the
@@ -23,7 +23,7 @@ relevant `.bob/relay/knowledge/` files.
 6. Estimate how long this ticket would realistically take a developer to
    complete manually, without Relay/Bob - based on the number/complexity of
    the acceptance criteria above, the files it likely touches, whether a
-   similar past task exists in `.bob/relay/knowledge/` (weight toward that
+   similar past task exists in `.bob/knowledge/` (weight toward that
    task's real recorded duration if so), and general estimation heuristics
    (simple CRUD vs. cross-cutting logic vs. new integration). Record it with
    `npx relay task estimate --method ai-estimated --total-sec <seconds>`

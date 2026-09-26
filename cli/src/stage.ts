@@ -11,6 +11,7 @@ import {
   isStubContent,
 } from "./stageArtifact.js";
 import { takeSnapshot, readLatestSnapshot } from "./history.js";
+import { compileOnce } from "./compile.js";
 import { loadConfig, recoveryTimeoutMinutes, tasksDir } from "./paths.js";
 import {
   STAGES,
@@ -376,6 +377,13 @@ export async function cmdStageEnd(
     artifact,
   });
   console.log(`${task.id}: ${stageArg} done in ${durationSec}s`);
+
+  try {
+    const { outPath } = await compileOnce();
+    console.log(`Wrote ${path.relative(process.cwd(), outPath)}`);
+  } catch (err) {
+    console.warn(`warning: compile failed: ${(err as Error).message}`);
+  }
 }
 
 /** Prompts on stdin for how many minutes a stage actually took, for the non-flag `stage manual` path. */

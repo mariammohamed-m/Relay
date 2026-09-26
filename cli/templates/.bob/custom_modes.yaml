@@ -3,7 +3,7 @@
 # loaded automatically by Bob; roleDefinition here stays under 120 words each.
 customModes:
   - slug: relay-onboard
-    name: 🧭 Relay Onboard
+    name: Relay Onboard
     description: Reads knowledge base, explores the codebase, writes architecture notes.
     roleDefinition: >
       You orient a developer on an unfamiliar codebase for their next Relay
@@ -16,11 +16,11 @@ customModes:
       - subagent
       - skill
       - - edit
-        - fileRegex: "^\\.bob/relay/knowledge/.*|\\.bob/relay/tasks/.*/00-onboard\\.md$|^AGENTS\\.md$"
+        - fileRegex: "^\\.bob/knowledge/.*|\\.bob/tasks/.*/00-onboard\\.md$|^AGENTS\\.md$"
           description: Knowledge base, task onboard artifact, and AGENTS.md.
 
   - slug: relay-brief
-    name: 📋 Relay Brief
+    name: Relay Brief
     description: Extracts acceptance criteria from a ticket into task.json.
     roleDefinition: >
       You turn a source ticket into testable acceptance criteria. You flag
@@ -32,11 +32,11 @@ customModes:
       - execute
       - skill
       - - edit
-        - fileRegex: "^\\.bob/relay/tasks/.*"
+        - fileRegex: "^\\.bob/tasks/.*"
           description: Task directory only.
 
   - slug: relay-debug
-    name: 🐛 Relay Debug
+    name: Relay Debug
     description: Root-causes a bug and harvests a gotcha into the knowledge base.
     roleDefinition: >
       You find root causes, not symptoms, and you never close a debug
@@ -50,7 +50,7 @@ customModes:
       - skill
 
   - slug: relay-test
-    name: 🧪 Relay Test
+    name: Relay Test
     description: Writes one test per testable criterion and per debug note; marks coverage honestly.
     roleDefinition: >
       You write tests, then mark exactly the criteria a real test verifies
@@ -64,7 +64,7 @@ customModes:
       - skill
 
   - slug: relay-review
-    name: 🔍 Relay Review
+    name: Relay Review
     description: Four-pass review - plan conformance, criteria coverage, gotcha avoidance, conventions.
     roleDefinition: >
       You review implementation against the plan, the acceptance criteria,
@@ -77,11 +77,11 @@ customModes:
       - subagent
       - skill
       - - edit
-        - fileRegex: "^\\.bob/relay/tasks/.*"
+        - fileRegex: "^\\.bob/tasks/.*"
           description: Task directory only.
 
   - slug: relay-pr
-    name: 🚀 Relay PR
+    name: Relay PR
     description: Assembles the PR description from the task baton, then hands off to Bob's PR generation.
     roleDefinition: >
       You assemble a PR description entirely from files already written
@@ -94,11 +94,11 @@ customModes:
       - execute
       - skill
       - - edit
-        - fileRegex: "^\\.bob/relay/tasks/.*"
+        - fileRegex: "^\\.bob/tasks/.*"
           description: Task directory only.
 
   - slug: relay-docs
-    name: 📚 Relay Docs
+    name: Relay Docs
     description: Closes the flywheel - folds this task's knowledge into the durable knowledge base.
     roleDefinition: >
       You update the durable knowledge base so the next task's onboard
@@ -110,7 +110,7 @@ customModes:
       - execute
       - skill
       - - edit
-        - fileRegex: "^\\.bob/relay/.*|^AGENTS\\.md$|^docs/.*"
+        - fileRegex: "^\\.bob/.*|^AGENTS\\.md$|^docs/.*"
           description: Relay baton, AGENTS.md, and docs/ only.
 
   # Isolation probe (see .bob/DIAGNOSIS.md) - bare required fields only,

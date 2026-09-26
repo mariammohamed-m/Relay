@@ -2,7 +2,7 @@
 
 # Relay rules for Agent mode
 
-**Read first:** `02-plan.md`, `01-brief.md`, and any `.bob/relay/knowledge/`
+**Read first:** `02-plan.md`, `01-brief.md`, and any `.bob/knowledge/`
 gotchas relevant to the files the plan touches.
 
 **Job:** implement the active task's plan.

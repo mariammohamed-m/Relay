@@ -1,5 +1,5 @@
-// `relay doctor` - sanity-checks the .bob/relay/ config (modes/rules/skills)
-// against the .bob/relay/ baton (tasks/knowledge) and the gotchas.md parser,
+// `relay doctor` - sanity-checks the .bob/ config (modes/rules/skills)
+// against the .bob/ baton (tasks/knowledge) and the gotchas.md parser,
 // so a broken stage mapping or a bad heading format is caught before a live
 // Bob session hits it.
 import path from "node:path";
@@ -48,7 +48,7 @@ async function checkStageModes(): Promise<CheckResult> {
     return {
       name: "every stage has a mode or rules file",
       pass: false,
-      detail: ".bob/relay/custom_modes.yaml missing",
+      detail: ".bob/custom_modes.yaml missing",
     };
   }
   const parsed = parseYaml(await readFile(file, "utf8")) as {
@@ -68,7 +68,7 @@ async function checkStageModes(): Promise<CheckResult> {
     }
     const rulesDir = path.join(relayRoot(), `rules-${mode}`);
     if (!existsSync(rulesDir)) {
-      problems.push(`${stage}: no .bob/relay/rules-${mode}/ directory`);
+      problems.push(`${stage}: no .bob/rules-${mode}/ directory`);
     }
   }
   return {
@@ -102,7 +102,7 @@ async function checkReferencedPaths(): Promise<CheckResult> {
       seen.add(ref);
       if (artifactNames.has(ref)) continue; // written by an earlier stage
       if (ref === "AGENTS.md") continue; // created on first relay-docs run
-      if (ref.startsWith(".bob/relay/knowledge/")) {
+      if (ref.startsWith(".bob/knowledge/")) {
         if (!existsSync(path.join(process.cwd(), ref)))
           problems.push(
             `${ref} (referenced in ${path.relative(process.cwd(), file)})`,
@@ -131,27 +131,27 @@ async function checkReferencedPaths(): Promise<CheckResult> {
 async function checkActiveResolves(): Promise<CheckResult> {
   if (!existsSync(activeFile())) {
     return {
-      name: ".bob/relay/.active resolves",
+      name: ".bob/.active resolves",
       pass: false,
-      detail: ".bob/relay/.active does not exist",
+      detail: ".bob/.active does not exist",
     };
   }
   const id = (await readFile(activeFile(), "utf8")).trim();
   if (!id)
     return {
-      name: ".bob/relay/.active resolves",
+      name: ".bob/.active resolves",
       pass: false,
-      detail: ".bob/relay/.active is empty",
+      detail: ".bob/.active is empty",
     };
   const tasksDirPath = path.join(relayRoot(), "tasks");
   const dirs = existsSync(tasksDirPath) ? await readdir(tasksDirPath) : [];
   const match = dirs.find((d) => d === id || d.startsWith(`${id}-`));
   return {
-    name: ".bob/relay/.active resolves",
+    name: ".bob/.active resolves",
     pass: Boolean(match),
     detail: match
       ? `-> ${match}`
-      : `"${id}" does not match any .bob/relay/tasks/ directory`,
+      : `"${id}" does not match any .bob/tasks/ directory`,
   };
 }
 
@@ -159,7 +159,7 @@ async function checkBobignore(): Promise<CheckResult> {
   const file = path.join(process.cwd(), ".bobignore");
   if (!existsSync(file))
     return {
-      name: ".bobignore does not exclude .bob/relay/",
+      name: ".bobignore does not exclude .bob/",
       pass: true,
       detail: "no .bobignore file",
     };
@@ -169,10 +169,10 @@ async function checkBobignore(): Promise<CheckResult> {
       l &&
       !l.startsWith("#") &&
       !l.startsWith("!") &&
-      /^\.bob(\/relay)?\/?$/.test(l),
+      /^\.bob\/?$/.test(l),
   );
   return {
-    name: ".bobignore does not exclude .bob/relay/",
+    name: ".bobignore does not exclude .bob/",
     pass: !excluding,
     detail: excluding ? `found rule: "${excluding}"` : "ok",
   };
@@ -261,7 +261,7 @@ async function checkCompiledDataFresh(): Promise<CheckResult> {
   try {
     outPath = dashboardDataPath(await loadConfig());
   } catch {
-    return { name, pass: false, detail: ".bob/relay/config.yml missing/unreadable" };
+    return { name, pass: false, detail: ".bob/config.yml missing/unreadable" };
   }
   if (!existsSync(outPath)) {
     return { name, pass: false, detail: `missing - run \`relay compile\`` };

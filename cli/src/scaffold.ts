@@ -67,48 +67,29 @@ export async function cmdInit(
   opts: { force?: boolean },
   quiet?: boolean,
 ): Promise<void> {
-  const cwd = process.cwd();
-  const bobDir = path.join(cwd, ".bob");
-  const relayDir = relayRoot(); // .bob/relay - the only path this ever writes to
+  const bobDir = relayRoot(); // .bob - the only path this ever writes to
   const bobExisted = existsSync(bobDir);
-  const relaySubpackageExisted = existsSync(relayDir);
 
-  if (!opts.force && relaySubpackageExisted) {
-    console.error(
-      "Refusing to overwrite existing .bob/relay/ - rerun with --force.",
-    );
+  if (!opts.force && bobExisted) {
+    console.error("Refusing to overwrite existing .bob/ - rerun with --force.");
     process.exitCode = 1;
     return;
   }
 
-  // .bob/ pre-dating this run means it's the developer's own (possibly
-  // hand-configured) IDE setup - Relay never touches anything in it outside
-  // .bob/relay/, but their existing modes/rules could still behave
-  // differently than Relay's stages expect (e.g. a mode name collision, or a
-  // rule that changes how Bob picks a mode), so flag it instead of staying
-  // silent.
-  if (bobExisted && !relaySubpackageExisted) {
-    console.warn(
-      "Found an existing .bob/ folder - installing Relay's modes/rules/skills into " +
-        ".bob/relay/ so your existing config is untouched. Check for naming or " +
-        "behavior conflicts (e.g. a custom mode/rule with the same trigger) with your own setup.",
-    );
-  }
+  await ensureDir(bobDir);
 
-  await ensureDir(relayDir);
-
-  // Bob-side templates (custom_modes.yaml, rules-*/, skills/, commands/) -
-  // isolated under .bob/relay/ rather than the shared .bob/ root.
+  // Bob-side templates (custom_modes.yaml, rules-*/, skills/, commands/) and
+  // Relay's own data templates (config.yml, knowledge/, tasks/) both land
+  // directly in .bob/ - one folder, overwritten wholesale on every init.
   const templateBob = path.join(TEMPLATES_DIR, ".bob");
   for (const entry of await readdir(templateBob)) {
-    await cp(path.join(templateBob, entry), path.join(relayDir, entry), {
+    await cp(path.join(templateBob, entry), path.join(bobDir, entry), {
       recursive: true,
       force: true,
     });
   }
 
-  // Relay's own data templates (config.yml, knowledge/, tasks/) - same folder.
-  const templateRelay = path.join(TEMPLATES_DIR, ".relay");
+  const templateRelay = path.join(TEMPLATES_DIR, "relay-data");
   const tasksReal = await taskDirHasRealContent(tasksDir());
   const knowledgeReal = await knowledgeDirHasRealContent(
     knowledgeDir(),
@@ -117,28 +98,26 @@ export async function cmdInit(
 
   for (const entry of await readdir(templateRelay)) {
     if (entry === "tasks" && tasksReal) {
-      console.warn("Skipped .bob/relay/tasks/ - it already contains real tasks.");
+      console.warn("Skipped .bob/tasks/ - it already contains real tasks.");
       continue;
     }
     if (entry === "knowledge" && knowledgeReal) {
       console.warn(
-        "Skipped .bob/relay/knowledge/ - it already contains harvested knowledge.",
+        "Skipped .bob/knowledge/ - it already contains harvested knowledge.",
       );
       continue;
     }
-    await cp(path.join(templateRelay, entry), path.join(relayDir, entry), {
+    await cp(path.join(templateRelay, entry), path.join(bobDir, entry), {
       recursive: true,
       force: true,
     });
   }
 
-  console.log(
-    (relaySubpackageExisted ? "Re-scaffolded" : "Created") + " .bob/relay/.",
-  );
+  console.log((bobExisted ? "Re-scaffolded" : "Created") + " .bob/.");
   if (!quiet) {
     console.log(
       "\nNext steps:\n" +
-        "  1. Open this repo in Bob IDE - it will pick up .bob/relay/ automatically.\n" +
+        "  1. Open this repo in Bob IDE - it will pick up .bob/ automatically.\n" +
         "  2. Run `npx relay task new \"<title>\"` to start your first task.\n" +
         "  3. Run `npx relay doctor` any time to sanity-check the setup.",
     );
@@ -175,7 +154,7 @@ export async function cmdTaskNew(
   opts: TaskNewOptions,
 ): Promise<void> {
   if (!existsSync(relayRoot())) {
-    throw new Error(".bob/relay/ not found - run `relay init` first.");
+    throw new Error(".bob/ not found - run `relay init` first.");
   }
   const id = await nextTaskId();
   const slug = slugify(title) || "task";
@@ -236,7 +215,7 @@ export async function cmdTaskNew(
   console.log(`Mode: ${mode}`);
   if (task.tags.length) console.log(`Tags: ${task.tags.join(", ")}`);
   console.log(`Active task set to ${id}.`);
-  console.log(`\nPaste into Bob: @.bob/relay/tasks/${id}-${slug}/`);
+  console.log(`\nPaste into Bob: @.bob/tasks/${id}-${slug}/`);
 }
 
 export interface StartOptions extends TaskNewOptions {
@@ -250,7 +229,7 @@ export interface StartOptions extends TaskNewOptions {
  * Quickstart: init if needed, create+activate a task, compile, and serve the
  * dashboard - everything short of opening Bob itself. After this returns,
  * the only thing left for the developer to do is switch Bob to onboarding.
- * `--force` re-scaffolds .bob/relay/ even if it already exists (e.g. after
+ * `--force` re-scaffolds .bob/ even if it already exists (e.g. after
  * a previous partial/failed run left it half-written).
  */
 export async function cmdStart(

@@ -3,7 +3,7 @@
 # Relay rules for Plan mode
 
 **Read first:** `01-brief.md`, `task.json.acceptanceCriteria`, relevant
-`.bob/relay/knowledge/` files.
+`.bob/knowledge/` files.
 
 **Job:** produce an ordered implementation plan for the active task's
 current brief. Do not implement - Plan mode stops for user approval.
