@@ -20,5 +20,5 @@ CLAUDE.md
 .env
 .env.local
 
-# NOTE: .relay/ and .bob/ are intentionally NOT ignored - they are the product.
+.bob/
 node_modules
