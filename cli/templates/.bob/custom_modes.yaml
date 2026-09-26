@@ -16,7 +16,7 @@ customModes:
       - subagent
       - skill
       - - edit
-        - fileRegex: "^\\.relay/knowledge/.*|\\.relay/tasks/.*/00-onboard\\.md$|^AGENTS\\.md$"
+        - fileRegex: "^\\.bob/relay/knowledge/.*|\\.bob/relay/tasks/.*/00-onboard\\.md$|^AGENTS\\.md$"
           description: Knowledge base, task onboard artifact, and AGENTS.md.
 
   - slug: relay-brief
@@ -32,7 +32,7 @@ customModes:
       - execute
       - skill
       - - edit
-        - fileRegex: "^\\.relay/tasks/.*"
+        - fileRegex: "^\\.bob/relay/tasks/.*"
           description: Task directory only.
 
   - slug: relay-debug
@@ -77,7 +77,7 @@ customModes:
       - subagent
       - skill
       - - edit
-        - fileRegex: "^\\.relay/tasks/.*"
+        - fileRegex: "^\\.bob/relay/tasks/.*"
           description: Task directory only.
 
   - slug: relay-pr
@@ -94,7 +94,7 @@ customModes:
       - execute
       - skill
       - - edit
-        - fileRegex: "^\\.relay/tasks/.*"
+        - fileRegex: "^\\.bob/relay/tasks/.*"
           description: Task directory only.
 
   - slug: relay-docs
@@ -110,7 +110,7 @@ customModes:
       - execute
       - skill
       - - edit
-        - fileRegex: "^\\.relay/.*|^AGENTS\\.md$|^docs/.*"
+        - fileRegex: "^\\.bob/relay/.*|^AGENTS\\.md$|^docs/.*"
           description: Relay baton, AGENTS.md, and docs/ only.
 
   # Isolation probe (see .bob/DIAGNOSIS.md) - bare required fields only,

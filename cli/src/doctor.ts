@@ -1,6 +1,7 @@
-// `relay doctor` - sanity-checks the .bob/ config against the .relay/ baton
-// and the gotchas.md parser, so a broken stage mapping or a bad heading
-// format is caught before a live Bob session hits it.
+// `relay doctor` - sanity-checks the .bob/relay/ config (modes/rules/skills)
+// against the .bob/relay/ baton (tasks/knowledge) and the gotchas.md parser,
+// so a broken stage mapping or a bad heading format is caught before a live
+// Bob session hits it.
 import path from "node:path";
 import { readFile, readdir } from "node:fs/promises";
 import { existsSync } from "node:fs";
@@ -15,8 +16,6 @@ interface CheckResult {
   pass: boolean;
   detail: string;
 }
-
-const bobRoot = (): string => path.join(process.cwd(), ".bob");
 
 // Mode each stage runs under, per .bob/custom_modes.yaml + FORMAT-NOTES.md.
 const STAGE_MODE: Record<StageId, string> = {
@@ -44,12 +43,12 @@ async function findMarkdownFiles(dir: string): Promise<string[]> {
 }
 
 async function checkStageModes(): Promise<CheckResult> {
-  const file = path.join(bobRoot(), "custom_modes.yaml");
+  const file = path.join(relayRoot(), "custom_modes.yaml");
   if (!existsSync(file)) {
     return {
       name: "every stage has a mode or rules file",
       pass: false,
-      detail: ".bob/custom_modes.yaml missing",
+      detail: ".bob/relay/custom_modes.yaml missing",
     };
   }
   const parsed = parseYaml(await readFile(file, "utf8")) as {
@@ -67,9 +66,9 @@ async function checkStageModes(): Promise<CheckResult> {
       );
       continue;
     }
-    const rulesDir = path.join(bobRoot(), `rules-${mode}`);
+    const rulesDir = path.join(relayRoot(), `rules-${mode}`);
     if (!existsSync(rulesDir)) {
-      problems.push(`${stage}: no .bob/rules-${mode}/ directory`);
+      problems.push(`${stage}: no .bob/relay/rules-${mode}/ directory`);
     }
   }
   return {
@@ -85,8 +84,8 @@ async function checkReferencedPaths(): Promise<CheckResult> {
   // neither, so those references aren't checkable (or meaningful) there.
   const inRelayMonorepo = existsSync(path.join(process.cwd(), "cli", "src"));
   const files = [
-    ...(await findMarkdownFiles(path.join(bobRoot(), "rules"))),
-    ...(await findMarkdownFiles(bobRoot())),
+    ...(await findMarkdownFiles(path.join(relayRoot(), "rules"))),
+    ...(await findMarkdownFiles(relayRoot())),
   ];
   const artifactNames = new Set(
     Object.values(STAGE_ARTIFACT).filter((a): a is string => Boolean(a)),
@@ -103,7 +102,7 @@ async function checkReferencedPaths(): Promise<CheckResult> {
       seen.add(ref);
       if (artifactNames.has(ref)) continue; // written by an earlier stage
       if (ref === "AGENTS.md") continue; // created on first relay-docs run
-      if (ref.startsWith(".relay/knowledge/")) {
+      if (ref.startsWith(".bob/relay/knowledge/")) {
         if (!existsSync(path.join(process.cwd(), ref)))
           problems.push(
             `${ref} (referenced in ${path.relative(process.cwd(), file)})`,
@@ -132,27 +131,27 @@ async function checkReferencedPaths(): Promise<CheckResult> {
 async function checkActiveResolves(): Promise<CheckResult> {
   if (!existsSync(activeFile())) {
     return {
-      name: ".relay/.active resolves",
+      name: ".bob/relay/.active resolves",
       pass: false,
-      detail: ".relay/.active does not exist",
+      detail: ".bob/relay/.active does not exist",
     };
   }
   const id = (await readFile(activeFile(), "utf8")).trim();
   if (!id)
     return {
-      name: ".relay/.active resolves",
+      name: ".bob/relay/.active resolves",
       pass: false,
-      detail: ".relay/.active is empty",
+      detail: ".bob/relay/.active is empty",
     };
   const tasksDirPath = path.join(relayRoot(), "tasks");
   const dirs = existsSync(tasksDirPath) ? await readdir(tasksDirPath) : [];
   const match = dirs.find((d) => d === id || d.startsWith(`${id}-`));
   return {
-    name: ".relay/.active resolves",
+    name: ".bob/relay/.active resolves",
     pass: Boolean(match),
     detail: match
       ? `-> ${match}`
-      : `"${id}" does not match any .relay/tasks/ directory`,
+      : `"${id}" does not match any .bob/relay/tasks/ directory`,
   };
 }
 
@@ -160,17 +159,20 @@ async function checkBobignore(): Promise<CheckResult> {
   const file = path.join(process.cwd(), ".bobignore");
   if (!existsSync(file))
     return {
-      name: ".bobignore does not exclude .relay/",
+      name: ".bobignore does not exclude .bob/relay/",
       pass: true,
       detail: "no .bobignore file",
     };
   const lines = (await readFile(file, "utf8")).split("\n").map((l) => l.trim());
   const excluding = lines.find(
     (l) =>
-      l && !l.startsWith("#") && !l.startsWith("!") && /^\.relay\/?$/.test(l),
+      l &&
+      !l.startsWith("#") &&
+      !l.startsWith("!") &&
+      /^\.bob(\/relay)?\/?$/.test(l),
   );
   return {
-    name: ".bobignore does not exclude .relay/",
+    name: ".bobignore does not exclude .bob/relay/",
     pass: !excluding,
     detail: excluding ? `found rule: "${excluding}"` : "ok",
   };
@@ -178,8 +180,8 @@ async function checkBobignore(): Promise<CheckResult> {
 
 async function checkGotchaFormat(): Promise<CheckResult> {
   const files = [
-    path.join(bobRoot(), "skills", "relay-harvest", "SKILL.md"),
-    path.join(bobRoot(), "rules-relay-debug", "debug.md"),
+    path.join(relayRoot(), "skills", "relay-harvest", "SKILL.md"),
+    path.join(relayRoot(), "rules-relay-debug", "debug.md"),
   ].filter(existsSync);
   if (files.length === 0) {
     return {
@@ -254,12 +256,12 @@ async function checkStuckStages(): Promise<CheckResult> {
 }
 
 async function checkCompiledDataFresh(): Promise<CheckResult> {
-  const name = "dashboard/public/relay-data.json is present and up to date";
+  const name = "compiled dashboard data is present and up to date";
   let outPath: string;
   try {
     outPath = dashboardDataPath(await loadConfig());
   } catch {
-    return { name, pass: false, detail: ".relay/config.yml missing/unreadable" };
+    return { name, pass: false, detail: ".bob/relay/config.yml missing/unreadable" };
   }
   if (!existsSync(outPath)) {
     return { name, pass: false, detail: `missing - run \`relay compile\`` };

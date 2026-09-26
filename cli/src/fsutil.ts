@@ -26,7 +26,13 @@ export async function writeJSON(filePath: string, data: unknown): Promise<void> 
 }
 
 export async function readJSON<T>(filePath: string): Promise<T> {
-  return JSON.parse(await readFile(filePath, 'utf8')) as T;
+  const raw = await readFile(filePath, 'utf8');
+  try {
+    return JSON.parse(raw) as T;
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    throw new Error(`${filePath} is not valid JSON (${msg}) - it may have been hand-edited or corrupted.`);
+  }
 }
 
 /** Create `filePath` with `content` only if it doesn't already exist. Returns true if created. */
@@ -44,7 +50,7 @@ export async function listDirs(dir: string): Promise<string[]> {
 
 /**
  * Reads a task.json and fills in fields absent from older files (`tags`,
- * `updatedAt`, and the per-stage revisit fields `visitCount`/`history`/`staleSince`)
+ * `updatedAt`, and the per-stage fields `visitCount`/`history`/`staleSince`/`source`)
  * so every in-memory `Task` satisfies the current shape. The one place this
  * backward-compat tolerance lives, per AGENTS.md's data contract - never
  * duplicate these defaults at each call site.
@@ -72,6 +78,9 @@ export async function readTask(filePath: string): Promise<import('./types.js').T
     }
     if (rec.staleSince === undefined) {
       rec.staleSince = null;
+    }
+    if (rec.source === undefined) {
+      rec.source = rec.status === 'done' ? 'bob' : null;
     }
   }
 

@@ -1,5 +1,5 @@
 // Test suite for the Relay CLI. Uses node:test with a scratch cwd per test
-// so nothing touches the real .relay/ fixture.
+// so nothing touches the real .bob/relay/ fixture.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtempSync, rmSync, readFileSync, appendFileSync } from 'node:fs';
@@ -28,7 +28,7 @@ test('task new produces a task.json satisfying the Task shape', async () => {
     await cmdInit({});
     await cmdTaskNew('Fix the thing', { sourceType: 'adhoc' });
 
-    const dir = path.join(process.cwd(), '.relay', 'tasks', 'T-000-fix-the-thing');
+    const dir = path.join(process.cwd(), '.bob', 'relay', 'tasks', 'T-000-fix-the-thing');
     const task = JSON.parse(readFileSync(path.join(dir, 'task.json'), 'utf8'));
 
     assert.equal(task.id, 'T-000');
@@ -52,15 +52,15 @@ test('start scaffolds, creates, activates, and compiles a task in one call', asy
     // dashboard: false - a real HTTP server/browser launch has no place in a unit test.
     await cmdStart('Fix the thing', { sourceType: 'adhoc', dashboard: false });
 
-    const dir = path.join(process.cwd(), '.relay', 'tasks', 'T-000-fix-the-thing');
+    const dir = path.join(process.cwd(), '.bob', 'relay', 'tasks', 'T-000-fix-the-thing');
     const task = JSON.parse(readFileSync(path.join(dir, 'task.json'), 'utf8'));
     assert.equal(task.id, 'T-000');
 
-    const active = readFileSync(path.join(process.cwd(), '.relay', '.active'), 'utf8').trim();
+    const active = readFileSync(path.join(process.cwd(), '.bob', 'relay', '.active'), 'utf8').trim();
     assert.equal(active, 'T-000');
 
     const compiled = JSON.parse(
-      readFileSync(path.join(process.cwd(), 'dashboard', 'public', 'relay-data.json'), 'utf8'),
+      readFileSync(path.join(process.cwd(), '.bob', 'relay', 'relay-data.json'), 'utf8'),
     );
     assert.ok(compiled.tasks.some((t: any) => t.id === 'T-000'));
   });
@@ -77,13 +77,13 @@ test('stage start/end produce correct durations and update state', async () => {
     await new Promise((r) => setTimeout(r, 1100));
     await cmdStageEnd('plan', {});
 
-    const dir = path.join(process.cwd(), '.relay', 'tasks', 'T-000-widget');
+    const dir = path.join(process.cwd(), '.bob', 'relay', 'tasks', 'T-000-widget');
     const task = JSON.parse(readFileSync(path.join(dir, 'task.json'), 'utf8'));
     assert.equal(task.stages.plan.status, 'done');
     assert.ok(task.stages.plan.durationSec >= 1);
     assert.equal(task.stages.plan.artifact, '02-plan.md');
 
-    const events = readFileSync(path.join(process.cwd(), '.relay', 'metrics', 'events.jsonl'), 'utf8')
+    const events = readFileSync(path.join(process.cwd(), '.bob', 'relay', 'metrics', 'events.jsonl'), 'utf8')
       .trim()
       .split('\n')
       .map((l: string) => JSON.parse(l));
@@ -101,7 +101,7 @@ test('out-of-order stage end warns but does not crash', async () => {
 
     await assert.doesNotReject(() => cmdStageEnd('debug', {}));
 
-    const dir = path.join(process.cwd(), '.relay', 'tasks', 'T-000-widget');
+    const dir = path.join(process.cwd(), '.bob', 'relay', 'tasks', 'T-000-widget');
     const task = JSON.parse(readFileSync(path.join(dir, 'task.json'), 'utf8'));
     assert.equal(task.stages.debug.status, 'done');
     assert.equal(task.stages.debug.durationSec, 0);
@@ -119,7 +119,7 @@ test('compile on the Sprint 1 fixture produces valid RelayData', async () => {
     assert.ok(Array.isArray(data.tasks));
     assert.ok(data.tasks.length >= 1);
     assert.ok(Array.isArray(data.knowledge));
-    assert.ok(data.knowledge.some((k) => k.id === 'gotcha-014'));
+    assert.ok(data.knowledge.some((k) => k.id === 'gotcha-001'));
     assert.ok(Array.isArray(data.impact.perStage));
     assert.equal(data.impact.perStage.length, 9);
   } finally {
@@ -133,14 +133,14 @@ test('a malformed events.jsonl line is skipped and compilation still succeeds', 
     await cmdInit({});
     await cmdTaskNew('Widget', { sourceType: 'adhoc' });
 
-    appendFileSync(path.join(process.cwd(), '.relay', 'metrics', 'events.jsonl'), 'not json at all\n');
+    appendFileSync(path.join(process.cwd(), '.bob', 'relay', 'metrics', 'events.jsonl'), 'not json at all\n');
 
     const { compileOnce } = await import('./compile.js');
     await assert.doesNotReject(() => compileOnce());
   });
 });
 
-test('doctor passes all checks against the repo\'s real .bob/ + .relay/ config', async () => {
+test('doctor passes all checks against the repo\'s real .bob/relay/ config', async () => {
   const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
   const prevCwd = process.cwd();
   process.chdir(repoRoot);
@@ -167,9 +167,9 @@ test('doctor flags a stage with no mode and no rules directory', async () => {
     const { cmdInit, cmdTaskNew } = await import('./scaffold.js');
     await cmdInit({});
     await cmdTaskNew('Widget', { sourceType: 'adhoc' });
-    // cmdInit scaffolds .bob/ from templates - remove one stage's rules dir
+    // cmdInit scaffolds .bob/relay/ from templates - remove one stage's rules dir
     // so doctor has something to flag.
-    rmSync(path.join(process.cwd(), '.bob', 'rules-relay-debug'), { recursive: true, force: true });
+    rmSync(path.join(process.cwd(), '.bob', 'relay', 'rules-relay-debug'), { recursive: true, force: true });
 
     const { runDoctor } = await import('./doctor.js');
     const results = await runDoctor();
@@ -178,17 +178,49 @@ test('doctor flags a stage with no mode and no rules directory', async () => {
   });
 });
 
-test('doctor flags .bobignore excluding .relay/', async () => {
+test('doctor flags .bobignore excluding .bob/relay/', async () => {
   await withScratchCwd(async () => {
     const { cmdInit } = await import('./scaffold.js');
     await cmdInit({});
     const { writeFileSync } = await import('node:fs');
-    writeFileSync(path.join(process.cwd(), '.bobignore'), 'node_modules/\n.relay/\n');
+    writeFileSync(path.join(process.cwd(), '.bobignore'), 'node_modules/\n.bob/relay/\n');
 
     const { runDoctor } = await import('./doctor.js');
     const results = await runDoctor();
-    const ignoreCheck = results.find((r) => r.name === '.bobignore does not exclude .relay/');
+    const ignoreCheck = results.find((r) => r.name === '.bobignore does not exclude .bob/relay/');
     assert.equal(ignoreCheck?.pass, false);
+  });
+});
+
+test('init never touches an existing .bob/ outside .bob/relay/, and warns when one is found', async () => {
+  await withScratchCwd(async () => {
+    const { mkdirSync, writeFileSync, readFileSync } = await import('node:fs');
+    // Simulate a developer's own pre-existing .bob/ config, unrelated to Relay.
+    mkdirSync(path.join(process.cwd(), '.bob', 'rules-my-own-mode'), { recursive: true });
+    writeFileSync(
+      path.join(process.cwd(), '.bob', 'custom_modes.yaml'),
+      'customModes:\n  - slug: my-own-mode\n',
+    );
+
+    const warnings: string[] = [];
+    const origWarn = console.warn;
+    console.warn = (...args: unknown[]) => warnings.push(args.join(' '));
+    try {
+      const { cmdInit } = await import('./scaffold.js');
+      await cmdInit({});
+    } finally {
+      console.warn = origWarn;
+    }
+
+    // The developer's own files are untouched.
+    assert.equal(
+      readFileSync(path.join(process.cwd(), '.bob', 'custom_modes.yaml'), 'utf8'),
+      'customModes:\n  - slug: my-own-mode\n',
+    );
+    // Relay's own subpackage was still installed, isolated in .bob/relay/.
+    assert.ok(readFileSync(path.join(process.cwd(), '.bob', 'relay', 'custom_modes.yaml'), 'utf8').length > 0);
+    // A warning was surfaced about the pre-existing .bob/.
+    assert.ok(warnings.some((w) => w.includes('existing .bob/')));
   });
 });
 
@@ -198,7 +230,7 @@ test('tags are normalized, deduped, and sorted; updatedAt is set on every write'
     await cmdInit({});
     await cmdTaskNew('Widget', { sourceType: 'adhoc', tags: ['Billing', 'billing', ' Refunds! ', 'a-b'] });
 
-    const file = path.join(process.cwd(), '.relay', 'tasks', 'T-000-widget', 'task.json');
+    const file = path.join(process.cwd(), '.bob', 'relay', 'tasks', 'T-000-widget', 'task.json');
     let task = JSON.parse(readFileSync(file, 'utf8'));
     assert.deepEqual(task.tags, ['a-b', 'billing', 'refunds']);
     assert.equal(typeof task.updatedAt, 'string');
@@ -253,7 +285,7 @@ test('compile/reads tolerate a task.json missing tags and updatedAt', async () =
     await cmdInit({});
     await cmdTaskNew('Widget', { sourceType: 'adhoc' });
 
-    const file = path.join(process.cwd(), '.relay', 'tasks', 'T-000-widget', 'task.json');
+    const file = path.join(process.cwd(), '.bob', 'relay', 'tasks', 'T-000-widget', 'task.json');
     const task = JSON.parse(readFileSync(file, 'utf8'));
     delete task.tags;
     delete task.updatedAt;
@@ -275,7 +307,7 @@ test('stage start snapshots the artifact only when it has real content', async (
     const { listSnapshots, readLatestSnapshot } = await import('./history.js');
     await cmdInit({});
     await cmdTaskNew('Widget', { sourceType: 'adhoc' });
-    const dir = path.join(process.cwd(), '.relay', 'tasks', 'T-000-widget');
+    const dir = path.join(process.cwd(), '.bob', 'relay', 'tasks', 'T-000-widget');
 
     // First-ever start: artifact is still the stub, so no artifact should be snapshotted.
     await cmdStageStart('brief', {});
@@ -302,7 +334,7 @@ test('snapshot pruning keeps only the 5 most recent per stage', async () => {
     const { listSnapshots } = await import('./history.js');
     await cmdInit({});
     await cmdTaskNew('Widget', { sourceType: 'adhoc' });
-    const dir = path.join(process.cwd(), '.relay', 'tasks', 'T-000-widget');
+    const dir = path.join(process.cwd(), '.bob', 'relay', 'tasks', 'T-000-widget');
 
     for (let i = 0; i < 7; i++) {
       await cmdStageStart('plan', {});
@@ -319,7 +351,7 @@ test('cancel with a snapshot restores the artifact and task.json exactly', async
     const { cmdStageStart, cmdStageEnd, cmdStageCancel } = await import('./stage.js');
     await cmdInit({});
     await cmdTaskNew('Widget', { sourceType: 'adhoc' });
-    const dir = path.join(process.cwd(), '.relay', 'tasks', 'T-000-widget');
+    const dir = path.join(process.cwd(), '.bob', 'relay', 'tasks', 'T-000-widget');
     const artifactPath = path.join(dir, '01-brief.md');
     const { writeFileSync } = await import('node:fs');
 
@@ -348,7 +380,7 @@ test('cancel without a usable snapshot sets the stage to failed with a stub arti
     const { cmdStageStart, cmdStageCancel } = await import('./stage.js');
     await cmdInit({});
     await cmdTaskNew('Widget', { sourceType: 'adhoc' });
-    const dir = path.join(process.cwd(), '.relay', 'tasks', 'T-000-widget');
+    const dir = path.join(process.cwd(), '.bob', 'relay', 'tasks', 'T-000-widget');
     const artifactPath = path.join(dir, '01-brief.md');
     const { writeFileSync } = await import('node:fs');
 
@@ -372,7 +404,7 @@ test('starting a new stage auto-cancels a different stage left running', async (
     const { cmdStageStart } = await import('./stage.js');
     await cmdInit({});
     await cmdTaskNew('Widget', { sourceType: 'adhoc' });
-    const dir = path.join(process.cwd(), '.relay', 'tasks', 'T-000-widget');
+    const dir = path.join(process.cwd(), '.bob', 'relay', 'tasks', 'T-000-widget');
 
     await cmdStageStart('brief', {}); // left running, never ended
     await cmdStageStart('plan', {});
@@ -381,7 +413,7 @@ test('starting a new stage auto-cancels a different stage left running', async (
     assert.equal(task.stages.brief.status, 'failed'); // no prior snapshot to restore to
     assert.equal(task.stages.plan.status, 'running');
 
-    const events = readFileSync(path.join(process.cwd(), '.relay', 'metrics', 'events.jsonl'), 'utf8')
+    const events = readFileSync(path.join(process.cwd(), '.bob', 'relay', 'metrics', 'events.jsonl'), 'utf8')
       .trim()
       .split('\n')
       .map((l: string) => JSON.parse(l));
@@ -395,7 +427,7 @@ test('recover respects the configured timeout', async () => {
     const { cmdStageStart, cmdRecover } = await import('./stage.js');
     await cmdInit({});
     await cmdTaskNew('Widget', { sourceType: 'adhoc' });
-    const dir = path.join(process.cwd(), '.relay', 'tasks', 'T-000-widget');
+    const dir = path.join(process.cwd(), '.bob', 'relay', 'tasks', 'T-000-widget');
     await cmdStageStart('brief', {});
 
     // Backdate startedAt well past the 30m default timeout.
@@ -429,7 +461,7 @@ test('a failed stage re-run via stage start clears the failure', async () => {
     const { cmdStageStart, cmdStageCancel } = await import('./stage.js');
     await cmdInit({});
     await cmdTaskNew('Widget', { sourceType: 'adhoc' });
-    const dir = path.join(process.cwd(), '.relay', 'tasks', 'T-000-widget');
+    const dir = path.join(process.cwd(), '.bob', 'relay', 'tasks', 'T-000-widget');
     const file = path.join(dir, 'task.json');
 
     await cmdStageStart('brief', {});
@@ -481,7 +513,7 @@ test('stage revisit increments visitCount, pushes history entry, and marks downs
     const { cmdStageStart, cmdStageEnd } = await import('./stage.js');
     await cmdInit({});
     await cmdTaskNew('Revisit test', { sourceType: 'adhoc' });
-    const dir = path.join(process.cwd(), '.relay', 'tasks', 'T-000-revisit-test');
+    const dir = path.join(process.cwd(), '.bob', 'relay', 'tasks', 'T-000-revisit-test');
     const file = path.join(dir, 'task.json');
     const { writeFileSync } = await import('node:fs');
 
@@ -524,7 +556,7 @@ test('stage revisit increments visitCount, pushes history entry, and marks downs
     assert.ok(histEntry.changeSummary.includes('-'), 'changeSummary should mention removed lines');
 
     // Events: revisit_detected and stage_amended should be present.
-    const events = readFileSync(path.join(process.cwd(), '.relay', 'metrics', 'events.jsonl'), 'utf8')
+    const events = readFileSync(path.join(process.cwd(), '.bob', 'relay', 'metrics', 'events.jsonl'), 'utf8')
       .trim().split('\n').map((l: string) => JSON.parse(l));
     assert.ok(events.some((e: any) => e.event === 'revisit_detected' && e.fromStage === 'implement'));
     assert.ok(events.some((e: any) => e.event === 'stage_amended' && e.stage === 'implement' && e.visitNumber === 2));
@@ -537,7 +569,7 @@ test('re-running test after implement revisit clears staleSince and adds its own
     const { cmdStageStart, cmdStageEnd } = await import('./stage.js');
     await cmdInit({});
     await cmdTaskNew('Revisit clear test', { sourceType: 'adhoc' });
-    const dir = path.join(process.cwd(), '.relay', 'tasks', 'T-000-revisit-clear-test');
+    const dir = path.join(process.cwd(), '.bob', 'relay', 'tasks', 'T-000-revisit-clear-test');
     const file = path.join(dir, 'task.json');
     const { writeFileSync } = await import('node:fs');
 
@@ -580,7 +612,7 @@ test('readTask backfills visitCount and history on old task.json without those f
     const { cmdInit, cmdTaskNew } = await import('./scaffold.js');
     await cmdInit({});
     await cmdTaskNew('Compat test', { sourceType: 'adhoc' });
-    const file = path.join(process.cwd(), '.relay', 'tasks', 'T-000-compat-test', 'task.json');
+    const file = path.join(process.cwd(), '.bob', 'relay', 'tasks', 'T-000-compat-test', 'task.json');
     const { writeFileSync } = await import('node:fs');
 
     // Simulate an old task.json: manually set a stage to done without new fields.
@@ -608,7 +640,7 @@ test('report shows visitCount and totalVisitSec for revisited stages', async () 
     const { buildReport } = await import('./report.js');
     await cmdInit({});
     await cmdTaskNew('Report revisit test', { sourceType: 'adhoc' });
-    const dir = path.join(process.cwd(), '.relay', 'tasks', 'T-000-report-revisit-test');
+    const dir = path.join(process.cwd(), '.bob', 'relay', 'tasks', 'T-000-report-revisit-test');
     const { writeFileSync } = await import('node:fs');
 
     await cmdStageStart('plan', {});
@@ -628,5 +660,81 @@ test('report shows visitCount and totalVisitSec for revisited stages', async () 
     assert.ok(planStage.totalVisitSec !== null, 'totalVisitSec should be non-null');
     assert.ok(planStage.totalVisitSec! >= planStage.relaySec! || planStage.relaySec === null,
       'totalVisitSec should be >= last durationSec alone');
+  });
+});
+
+test('task new populates a default-fallback estimatedBaseline; a baseline-mode task gets none', async () => {
+  await withScratchCwd(async () => {
+    const { cmdInit, cmdTaskNew } = await import('./scaffold.js');
+    const { loadConfig } = await import('./paths.js');
+    await cmdInit({});
+    await cmdTaskNew('Widget', { sourceType: 'adhoc' });
+
+    const cfg = await loadConfig();
+    const dir = path.join(process.cwd(), '.bob', 'relay', 'tasks', 'T-000-widget');
+    const task = JSON.parse(readFileSync(path.join(dir, 'task.json'), 'utf8'));
+    assert.equal(task.estimatedBaseline.method, 'default-fallback');
+    assert.equal(task.estimatedBaseline.totalSec, cfg.estimation?.defaultFallbackSec);
+
+    await cmdTaskNew('Manual timing run', { sourceType: 'adhoc', baseline: true });
+    const baselineDir = path.join(process.cwd(), '.bob', 'relay', 'tasks', 'T-001-manual-timing-run');
+    const baselineTask = JSON.parse(readFileSync(path.join(baselineDir, 'task.json'), 'utf8'));
+    assert.equal(baselineTask.estimatedBaseline, undefined);
+  });
+});
+
+test('relay task estimate --method ai-estimated overwrites the placeholder', async () => {
+  await withScratchCwd(async () => {
+    const { cmdInit, cmdTaskNew } = await import('./scaffold.js');
+    const { cmdTaskEstimate } = await import('./estimate.js');
+    await cmdInit({});
+    await cmdTaskNew('Widget', { sourceType: 'adhoc' });
+
+    await cmdTaskEstimate({
+      method: 'ai-estimated',
+      totalSec: 5000,
+      perStage: 'brief=600,plan=1800',
+      basedOn: 'T-old',
+    });
+
+    const dir = path.join(process.cwd(), '.bob', 'relay', 'tasks', 'T-000-widget');
+    const task = JSON.parse(readFileSync(path.join(dir, 'task.json'), 'utf8'));
+    assert.equal(task.estimatedBaseline.method, 'ai-estimated');
+    assert.equal(task.estimatedBaseline.totalSec, 5000);
+    assert.equal(task.estimatedBaseline.perStage.brief, 600);
+    assert.equal(task.estimatedBaseline.perStage.plan, 1800);
+    assert.equal(task.estimatedBaseline.basedOnSimilarTask, 'T-old');
+  });
+});
+
+test('relay compile computes a historical average from completed relay tasks; new tasks then use it as their fallback', async () => {
+  await withScratchCwd(async () => {
+    const { cmdInit, cmdTaskNew } = await import('./scaffold.js');
+    const { resolveActiveTask } = await import('./active.js');
+    const { saveTask } = await import('./fsutil.js');
+    const { compileOnce } = await import('./compile.js');
+    const { loadConfig } = await import('./paths.js');
+    const { STAGES } = await import('./types.js');
+    await cmdInit({});
+
+    for (const total of [1000, 2000, 3000]) {
+      await cmdTaskNew('Widget', { sourceType: 'adhoc' });
+      const { dir, task } = await resolveActiveTask();
+      for (const s of STAGES) {
+        task.stages[s].status = 'done';
+        task.stages[s].durationSec = 0;
+      }
+      task.stages.brief.durationSec = total;
+      await saveTask(path.join(dir, 'task.json'), task);
+    }
+
+    await compileOnce();
+    const cfg = await loadConfig();
+    assert.equal(cfg.estimation?.averageTicketDurationSec, 2000);
+
+    await cmdTaskNew('Fourth widget', { sourceType: 'adhoc' });
+    const { task: fourth } = await resolveActiveTask();
+    assert.equal(fourth.estimatedBaseline?.method, 'historical-average');
+    assert.equal(fourth.estimatedBaseline?.totalSec, 2000);
   });
 });

@@ -13,10 +13,10 @@ sync.
 
 ## The mock vs. the live knowledge base - read this before recording
 
-`.relay/tasks/T-000-refund-window/` (the mock) is a complete, pre-written
+`.bob/relay/tasks/T-000-refund-window/` (the mock) is a complete, pre-written
 "what a successful run looks like" reference - its own artifacts narrate
 `gotcha-014` as something it already harvested. The **live** knowledge base
-(`.relay/knowledge/gotchas.md`) starts every rehearsal _without_
+(`.bob/relay/knowledge/gotchas.md`) starts every rehearsal _without_
 `gotcha-014` in it - `scripts/demo-reset.mjs` strips it out specifically so
 a live run can genuinely harvest it fresh, live, on camera. This means:
 right after a reset, if you fall back to showing the T-000 mock in the
@@ -43,10 +43,9 @@ KnowledgeFeed panel.
   and whatever live task is running.
 - **Before every take:** `node scripts/demo-reset.mjs --yes` then
   `node scripts/demo-check.mjs` - don't record on an unverified state.
-- **`npm run dev:dashboard`** running in a visible terminal pane
-  throughout - it now builds the CLI and starts `relay compile --watch`
-  automatically, so the dashboard updates live as stages complete with no
-  second terminal needed.
+- **`relay compile --watch`** running in a visible terminal pane throughout,
+  plus `relay dashboard` open in the browser - the dashboard updates live as
+  stages complete with no rebuild needed.
 
 ## Beat sheet
 
@@ -68,8 +67,8 @@ KnowledgeFeed panel.
   JourneyRail with the `onboard` node running (spinner), then done.
 - **Bob mode:** `relay-onboard`.
 - **Prompt:** _(from bob-runbook.md §1)_ "Onboard for
-  `@.relay/tasks/T-001-refund-window/`. Read
-  `.relay/knowledge/architecture.md` and `.relay/knowledge/gotchas.md`
+  `@.bob/relay/tasks/T-001-refund-window/`. Read
+  `.bob/relay/knowledge/architecture.md` and `.bob/relay/knowledge/gotchas.md`
   first. Then map the parts of `sample-project/` this task will touch -
   don't guess, read the actual files. Run `npx relay stage start onboard`
   before you begin and `npx relay stage end onboard` once you're oriented."
@@ -134,7 +133,7 @@ KnowledgeFeed panel.
   don't guess. Find the actual root cause, fix it, and write
   `04-debug-notes.md` with the symptom, root cause, and fix. Then run
   `npx relay harvest <id> --task T-001` to record it in
-  `.relay/knowledge/gotchas.md` for future tasks, and
+  `.bob/relay/knowledge/gotchas.md` for future tasks, and
   `npx relay stage end debug`."
 - **Dashboard:** this is the shot to hold on - KnowledgeFeed's newest
   entry appearing live, accent-pulsing dot, "harvested this task" badge.

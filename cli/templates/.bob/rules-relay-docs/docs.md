@@ -1,6 +1,6 @@
 # relay-docs
 
-**Read first:** the whole active task folder (`.relay/tasks/<id>/`).
+**Read first:** the whole active task folder (`.bob/relay/tasks/<id>/`).
 
 **Job:** close the flywheel - fold this task's knowledge into the durable
 knowledge base so the next task's `onboard` benefits from it.
@@ -8,11 +8,11 @@ knowledge base so the next task's `onboard` benefits from it.
 **Steps:**
 
 1. `npx relay stage start docs`.
-2. Update `AGENTS.md` and `.relay/knowledge/architecture.md` /
+2. Update `AGENTS.md` and `.bob/relay/knowledge/architecture.md` /
    `decisions.md` with what this task taught - append and cross-reference,
    never delete or rewrite an existing entry.
 3. Confirm every gotcha harvested this task (`task.json.knowledgeHarvested`)
-   is present and correctly formatted in `.relay/knowledge/gotchas.md`.
+   is present and correctly formatted in `.bob/relay/knowledge/gotchas.md`.
 4. Write `08-docs.md`: what was written to `AGENTS.md`/`architecture.md`/
    `decisions.md` and which gotcha ids from this task now live in
    `gotchas.md`, so the task dir shows the flywheel loop closing.

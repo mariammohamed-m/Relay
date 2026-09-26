@@ -1,4 +1,4 @@
-// Append-only writer/reader for .relay/metrics/events.jsonl, typed against
+// Append-only writer/reader for .bob/relay/metrics/events.jsonl, typed against
 // the RelayEvent union in ./types.ts.
 import { appendFile, readFile } from "node:fs/promises";
 import { existsSync } from "node:fs";

@@ -1,6 +1,5 @@
 project: relay
 schemaVersion: 1
-
 stages:
   - onboard
   - brief
@@ -11,9 +10,12 @@ stages:
   - review
   - pr
   - docs
-
 paths:
-  tasks: .relay/tasks
-  knowledge: .relay/knowledge
-  metrics: .relay/metrics/events.jsonl
-  dashboardData: dashboard/public/relay-data.json
+  tasks: .bob/relay/tasks
+  knowledge: .bob/relay/knowledge
+  metrics: .bob/relay/metrics/events.jsonl
+  dashboardData: .bob/relay/relay-data.json
+estimation:
+  averageTicketDurationSec: null
+  minSampleSize: 3
+  defaultFallbackSec: 21600

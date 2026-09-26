@@ -88,7 +88,7 @@ codeRefs: [src/lib/requestContext.ts:7, src/refunds/validators.ts:9]
 ```
 
 This is intentionally the same shape as the mock `gotcha-014` entry in
-`.relay/knowledge/gotchas.md` (see `docs/demo-script.md` for why the mock
+`.bob/relay/knowledge/gotchas.md` (see `docs/demo-script.md` for why the mock
 and the live knowledge base are deliberately two separate things).
 
 ## Expected extracted criteria

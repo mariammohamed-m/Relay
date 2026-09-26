@@ -42,7 +42,7 @@ report` (and the dashboard) this task is a comparison point, not a demo
    run to feature.
 3. **Work the ticket by hand** - read `REF-88.pdf`, plan, implement, debug,
    test, review, open a PR - using whatever the developer would normally
-   use (their editor, their own judgment, no AI pair). No Bob, no `.relay/`
+   use (their editor, their own judgment, no AI pair). No Bob, no `.bob/relay/`
    context reads, no shortcuts the relay-assisted run wouldn't also have
    available in spirit.
 4. **Time every stage explicitly**, as it's entered and left:
@@ -54,7 +54,7 @@ report` (and the dashboard) this task is a comparison point, not a demo
    `stage start`/`stage end` operate on the active task by default (or
    `--task <id>` for a specific one) and both accept `--mode` so a
    baseline run's events are tagged `mode: "baseline"` in
-   `.relay/metrics/events.jsonl`, distinct from a relay run's `mode:
+   `.bob/relay/metrics/events.jsonl`, distinct from a relay run's `mode:
 "relay"` events on the same stage.
 
 ### What counts as a stage's start/end

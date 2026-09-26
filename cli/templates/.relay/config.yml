@@ -13,10 +13,22 @@ stages:
   - docs
 
 paths:
-  tasks: .relay/tasks
-  knowledge: .relay/knowledge
-  metrics: .relay/metrics/events.jsonl
-  dashboardData: dashboard/public/relay-data.json
+  tasks: .bob/relay/tasks
+  knowledge: .bob/relay/knowledge
+  metrics: .bob/relay/metrics/events.jsonl
+  dashboardData: .bob/relay/relay-data.json
 
 recovery:
   timeoutMinutes: 30
+
+estimation:
+  # Recomputed by `relay compile` from completed relay-mode task durations.
+  # Null until `minSampleSize` real tasks have completed.
+  averageTicketDurationSec: null
+  minSampleSize: 3
+  # Placeholder default (seconds) used only when there's no history yet and
+  # a task's brief hasn't produced an AI estimate. 6 hours: a rough
+  # single-day estimate for a small-to-medium ticket (a few files touched,
+  # one integration point) - not a claim about this project, just a number
+  # to compare against until real data accumulates. Adjust to taste.
+  defaultFallbackSec: 21600

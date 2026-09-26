@@ -5,8 +5,10 @@ import { tasksDir } from "./paths.js";
 import { readEvents } from "./events.js";
 import {
   STAGES,
+  type EstimationMethod,
   type RelayEvent,
   type StageEndEvent,
+  type StageManualEvent,
   type StageId,
   type Task,
 } from "./types.js";
@@ -42,6 +44,18 @@ interface ReportData {
   incompleteStages: StageId[];
   hasAnyBaseline: boolean;
   excludedRuns: number;
+  /**
+   * Per-task estimated baselines, labeled by tier so a fallback average is
+   * never mistaken for a ticket-specific estimate. `hasRealBaseline` marks
+   * tasks that also have an actual manual run (from `pairs`) - the real one
+   * is primary there, this is shown only as a secondary note.
+   */
+  estimates: {
+    task: string;
+    totalSec: number;
+    method: EstimationMethod;
+    hasRealBaseline: boolean;
+  }[];
 }
 
 /**
@@ -77,13 +91,17 @@ async function readAllTasks(): Promise<Task[]> {
   return tasks;
 }
 
-/** First-completed stage_end event per (task, mode, stage) - later re-runs are excluded. */
+/**
+ * First-completed stage_end (or stage_manual - equivalent for duration
+ * purposes, see {@link StageManualEvent}) event per (task, mode, stage) -
+ * later re-runs are excluded.
+ */
 function firstCompletedDurations(
   events: RelayEvent[],
-): Map<string, StageEndEvent> {
-  const map = new Map<string, StageEndEvent>();
+): Map<string, StageEndEvent | StageManualEvent> {
+  const map = new Map<string, StageEndEvent | StageManualEvent>();
   for (const e of events) {
-    if (e.event !== "stage_end") continue;
+    if (e.event !== "stage_end" && e.event !== "stage_manual") continue;
     const key = `${e.task}|${e.mode}|${e.stage}`;
     const existing = map.get(key);
     if (!existing || Date.parse(e.ts) < Date.parse(existing.ts))
@@ -200,6 +218,18 @@ export async function buildReport(): Promise<ReportData> {
 
   const excludedRuns = events.filter((e) => e.event === "stage_cancel").length;
 
+  const pairedTaskIds = new Set(pairs.map((p) => p.relayId));
+  const estimates = tasks
+    .filter((t): t is Task & { estimatedBaseline: NonNullable<Task["estimatedBaseline"]> } =>
+      t.estimatedBaseline != null,
+    )
+    .map((t) => ({
+      task: t.id,
+      totalSec: t.estimatedBaseline.totalSec,
+      method: t.estimatedBaseline.method,
+      hasRealBaseline: pairedTaskIds.has(t.id),
+    }));
+
   return {
     methodology,
     pairs,
@@ -213,6 +243,7 @@ export async function buildReport(): Promise<ReportData> {
     incompleteStages,
     hasAnyBaseline: pairs.length > 0,
     excludedRuns,
+    estimates,
   };
 }
 
@@ -221,6 +252,17 @@ function fmtSec(s: number | null): string {
   const m = Math.floor(s / 60);
   const rem = Math.round(s % 60);
   return `${m}m${rem.toString().padStart(2, "0")}s`;
+}
+
+function estimateLabel(method: EstimationMethod): string {
+  switch (method) {
+    case "ai-estimated":
+      return "Estimated (based on ticket analysis)";
+    case "historical-average":
+      return "Estimated (based on historical average)";
+    case "default-fallback":
+      return "Estimated (default)";
+  }
 }
 
 function printHuman(r: ReportData): void {
@@ -283,6 +325,16 @@ function printHuman(r: ReportData): void {
   }
   console.log(`  Total: ${r.criteriaCovered}/${r.criteriaTotal} covered`);
 
+  if (r.estimates.length) {
+    console.log("\nEstimated baselines (per task):");
+    for (const e of r.estimates) {
+      const note = e.hasRealBaseline
+        ? " - secondary note; actual manual run above is primary"
+        : "";
+      console.log(`  ${e.task}: ${fmtSec(e.totalSec)} - ${estimateLabel(e.method)}${note}`);
+    }
+  }
+
   console.log("\nKnowledge harvested:");
   console.log(
     r.knowledgeHarvested.length
@@ -324,6 +376,13 @@ function toMarkdown(r: ReportData): string {
     "",
     `Acceptance criteria: ${r.criteriaCovered}/${r.criteriaTotal} covered.`,
   );
+  if (r.estimates.length) {
+    lines.push("", "Estimated baselines (per task):");
+    for (const e of r.estimates) {
+      const note = e.hasRealBaseline ? " (secondary - actual manual run is primary)" : "";
+      lines.push(`- ${e.task}: ${fmtSec(e.totalSec)} - ${estimateLabel(e.method)}${note}`);
+    }
+  }
   lines.push("", "Methodology:");
   for (const m of r.methodology) lines.push(`- ${m}`);
   if (r.excludedRuns > 0) {

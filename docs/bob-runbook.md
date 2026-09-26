@@ -18,7 +18,7 @@ is Sprint 4 work and out of scope here - this file is the spec for it.
 ## Shared rule, every mode
 
 Every stage mode should carry this rule (Relay's "baton contract" from the
-top-level README): **read `.relay/knowledge/` and the current task's prior
+top-level README): **read `.bob/relay/knowledge/` and the current task's prior
 stage artifacts before doing anything else, and end by writing this stage's
 artifact and running the matching `relay stage end` command before handing
 off.** The per-stage entries below only note what's specific to that stage.
@@ -28,15 +28,15 @@ off.** The per-stage entries below only note what's specific to that stage.
 ### 1. `relay-onboard`
 
 - **roleDefinition:** You're orienting on a task before any decisions get
-  made. Read `.relay/knowledge/architecture.md` and `.relay/knowledge/gotchas.md`
+  made. Read `.bob/relay/knowledge/architecture.md` and `.bob/relay/knowledge/gotchas.md`
   in full, then map the parts of `sample-project/` this task will touch.
   You write no code and make no decisions in this mode.
 - **whenToUse:** The very start of a task, before the ticket has even been
   read closely.
 - **groups:** `read`, `execute` (to run `relay` CLI commands), `skill`
 - **Canonical prompt:**
-  > Onboard for `@.relay/tasks/T-00N-<slug>/`. Read `.relay/knowledge/architecture.md`
-  > and `.relay/knowledge/gotchas.md` first. Then map the parts of
+  > Onboard for `@.bob/relay/tasks/T-00N-<slug>/`. Read `.bob/relay/knowledge/architecture.md`
+  > and `.bob/relay/knowledge/gotchas.md` first. Then map the parts of
   > `sample-project/` this task will touch - don't guess, read the actual
   > files. Run `npx relay stage start onboard` before you begin and
   > `npx relay stage end onboard` once you're oriented.
@@ -71,7 +71,7 @@ off.** The per-stage entries below only note what's specific to that stage.
 - **whenToUse:** After the brief is written and criteria are recorded.
 - **groups:** `read`, `execute`, `skill`
 - **Canonical prompt:**
-  > Propose an approach for `@.relay/tasks/T-00N-<slug>/01-brief.md`'s
+  > Propose an approach for `@.bob/relay/tasks/T-00N-<slug>/01-brief.md`'s
   > criteria. Include at least one alternative you considered and rejected,
   > and why. Flag the highest-risk part of the change explicitly. Write
   > `02-plan.md`, then `npx relay stage end plan`.
@@ -100,7 +100,7 @@ off.** The per-stage entries below only note what's specific to that stage.
   > A test is failing. Investigate - don't guess. Find the actual root
   > cause, fix it, and write `04-debug-notes.md` with the symptom, root
   > cause, and fix. Then run `npx relay harvest <id> --task T-00N` to
-  > record it in `.relay/knowledge/gotchas.md` for future tasks, and
+  > record it in `.bob/relay/knowledge/gotchas.md` for future tasks, and
   > `npx relay stage end debug`.
 - **Demo note:** this is the live centerpiece - the planted timezone bug
   (`docs/demo-answer-key.md`) should surface here, and the harvest should
@@ -131,7 +131,7 @@ off.** The per-stage entries below only note what's specific to that stage.
 - **groups:** `read`, `execute`, `skill`
 - **Canonical prompt:**
   > Review this task's diff against `02-plan.md`, `01-brief.md`'s
-  > criteria, and `.relay/knowledge/gotchas.md`. If subagents are
+  > criteria, and `.bob/relay/knowledge/gotchas.md`. If subagents are
   > available, run plan-conformance, criteria-coverage, and
   > gotcha-avoidance passes in parallel. Write `06-review.md` with a
   > suggested reading order for a human reviewer, then
@@ -154,11 +154,11 @@ off.** The per-stage entries below only note what's specific to that stage.
   is actually written where the next task's `onboard` will read it.
 - **whenToUse:** Last stage, after the PR is written.
 - **groups:** `read`, `execute`, `skill`, `edit` (scoped to
-  `.relay/knowledge/`)
+  `.bob/relay/knowledge/`)
 - **Canonical prompt:**
   > Confirm everything harvested this task (`npx relay status`) is
-  > correctly reflected in `.relay/knowledge/`. Update
-  > `.relay/knowledge/architecture.md` if this task changed how something
+  > correctly reflected in `.bob/relay/knowledge/`. Update
+  > `.bob/relay/knowledge/architecture.md` if this task changed how something
   > works. Then `npx relay stage end docs`.
 
 ## Recovering a cancelled stage

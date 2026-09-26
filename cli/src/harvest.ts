@@ -15,7 +15,7 @@ export async function cmdHarvest(
   const gotchasText = await readGotchasFile();
   if (!existsInGotchasText(gotchasText, id)) {
     console.warn(
-      `warning: "${id}" was not found in .relay/knowledge/gotchas.md - recording anyway.`,
+      `warning: "${id}" was not found in .bob/relay/knowledge/gotchas.md - recording anyway.`,
     );
   }
 

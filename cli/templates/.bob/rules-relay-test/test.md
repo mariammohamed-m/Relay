@@ -1,7 +1,7 @@
 # relay-test
 
 **Read first:** `task.json.acceptanceCriteria`, `01-brief.md`,
-`04-debug-notes.md` (if it exists), `.relay/knowledge/gotchas.md`.
+`04-debug-notes.md` (if it exists), `.bob/relay/knowledge/gotchas.md`.
 
 **Job:** write tests, then mark coverage honestly.
 

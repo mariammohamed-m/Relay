@@ -1,4 +1,4 @@
-// Tolerant parser for .relay/knowledge/gotchas.md into KnowledgeEntry[].
+// Tolerant parser for .bob/relay/knowledge/gotchas.md into KnowledgeEntry[].
 // Matches on "## gotcha-NNN - Title" headings and bolded "- **field:** value"
 // lines. Missing fields become null rather than throwing - the file is
 // hand/Bob-written prose, not a strict format.

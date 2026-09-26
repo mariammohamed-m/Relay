@@ -15,6 +15,7 @@ import {
   cmdStageEnd,
   cmdStageSkip,
   cmdStageCancel,
+  cmdStageManual,
   cmdRecover,
 } from "./stage.js";
 import {
@@ -23,6 +24,7 @@ import {
   cmdCriteriaUncover,
 } from "./criteria.js";
 import { cmdHarvest } from "./harvest.js";
+import { cmdTaskEstimate } from "./estimate.js";
 import { cmdPrCheckConflicts } from "./pr.js";
 import { cmdCompile } from "./compile.js";
 import { cmdReport } from "./report.js";
@@ -33,7 +35,7 @@ import { cmdDashboard } from "./dashboard.js";
 const program = new Command();
 program
   .name("relay")
-  .description("Relay CLI - scaffolds and manages the .relay/ baton.");
+  .description("Relay CLI - scaffolds and manages the .bob/relay/ baton.");
 
 function run(fn: () => Promise<void>): void {
   fn().catch((err: unknown) => {
@@ -44,17 +46,17 @@ function run(fn: () => Promise<void>): void {
 
 program
   .command("init")
-  .description("Scaffold .bob/ and .relay/ from the packaged templates.")
+  .description("Scaffold .bob/relay/ (Relay's own subfolder inside .bob/) from the packaged templates.")
   .option(
     "--force",
-    "overwrite existing .bob/.relay (never touches real tasks/knowledge)",
+    "overwrite an existing .bob/relay/ (never touches the rest of .bob/, or real tasks/knowledge)",
   )
   .action((opts) => run(() => cmdInit(opts)));
 
 program
   .command("start <title>")
   .description(
-    "Quickstart: scaffolds .relay/ if missing, creates a task, activates it, compiles, and opens the dashboard - the only thing left is switching Bob to onboarding.",
+    "Quickstart: scaffolds .bob/relay/ if missing, creates a task, activates it, compiles, and opens the dashboard - the only thing left is switching Bob to onboarding.",
   )
   .option("--source-type <type>", "ticket|issue|adhoc")
   .option("--source-ref <ref>", "reference within the source system")
@@ -65,7 +67,7 @@ program
   .option("--no-open", "don't auto-open a browser tab for the dashboard")
   .option(
     "--force",
-    "re-scaffold .bob/.relay even if they already exist (never touches real tasks/knowledge)",
+    "re-scaffold .bob/relay/ even if it already exists (never touches the rest of .bob/, or real tasks/knowledge)",
   )
   .action((title, opts) =>
     run(() =>
@@ -113,6 +115,28 @@ task
   .option("--tag <tag>", "filter to tasks having this tag")
   .action((opts) => run(() => cmdTaskList(opts)));
 
+task
+  .command("estimate")
+  .description(
+    "(Re)compute or view the estimated manual-completion baseline for a task. With no --method, computes the fallback tiers (historical average, then a hardcoded default) - free to rerun for testing. --method ai-estimated records the brief stage's LLM-produced estimate.",
+  )
+  .option("--task <id>")
+  .option("--method <method>", "ai-estimated (only accepted value; omit for the automatic fallback tiers)")
+  .option("--total-sec <n>", "required with --method ai-estimated", parseFloat)
+  .option("--per-stage <spec>", 'comma-separated "stage=sec" pairs, e.g. "brief=600,plan=1800"')
+  .option("--based-on <taskId>", "id of a similar past task this estimate was weighted against")
+  .action((opts) =>
+    run(() =>
+      cmdTaskEstimate({
+        task: opts.task,
+        method: opts.method,
+        totalSec: opts.totalSec,
+        perStage: opts.perStage,
+        basedOn: opts.basedOn,
+      }),
+    ),
+  );
+
 const taskTag = task.command("tag").description("Manage tags on a task.");
 
 taskTag
@@ -152,6 +176,28 @@ stage
   .option("--task <id>")
   .option("--mode <mode>")
   .action((s, opts) => run(() => cmdStageCancel(s, opts)));
+
+stage
+  .command("manual <stage>")
+  .description(
+    "Record a stage as done that was worked by hand without `stage start` - prompts for (or accepts flags for) how long it actually took.",
+  )
+  .option("--task <id>")
+  .option("--mode <mode>")
+  .option("--minutes <n>", "how many minutes the stage actually took", parseFloat)
+  .option("--started-at <iso>", "explicit ISO start timestamp (overrides --minutes)")
+  .option("--completed-at <iso>", "explicit ISO completion timestamp (default: now)")
+  .action((s, opts) =>
+    run(() =>
+      cmdStageManual(s, {
+        task: opts.task,
+        mode: opts.mode,
+        minutes: opts.minutes,
+        startedAt: opts.startedAt,
+        completedAt: opts.completedAt,
+      }),
+    ),
+  );
 
 program
   .command("recover")
@@ -203,8 +249,8 @@ program
 
 program
   .command("compile")
-  .description("Compile .relay/ into dashboard/public/relay-data.json.")
-  .option("--watch", "recompile on changes in .relay/")
+  .description("Compile .bob/relay/ into dashboard/public/relay-data.json.")
+  .option("--watch", "recompile on changes in .bob/relay/")
   .action((opts) => run(() => cmdCompile(opts)));
 
 program
@@ -223,7 +269,7 @@ program
 
 program
   .command("doctor")
-  .description("Check .bob/ config against .relay/ and the gotchas.md parser.")
+  .description("Check .bob/relay/ config against its own baton and the gotchas.md parser.")
   .action(() => run(() => cmdDoctor()));
 
 program

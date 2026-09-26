@@ -70,6 +70,12 @@ export interface StageOpts {
   mode?: RunMode;
 }
 
+export interface StageManualOpts extends StageOpts {
+  minutes?: number;
+  startedAt?: string;
+  completedAt?: string;
+}
+
 /**
  * Cancels a stuck/cancelled stage and either restores it from its most
  * recent `.history/` snapshot, or - if no snapshot has a usable artifact -
@@ -250,35 +256,36 @@ export async function cmdStageStart(
   console.log(`${task.id}: ${stageArg} started at ${now}`);
 }
 
-export async function cmdStageEnd(
-  stageArg: string,
-  opts: StageOpts,
-): Promise<void> {
-  assertStage(stageArg);
-  const { dir, task } = await resolveActiveTask(opts.task);
+/**
+ * Shared completion logic for `stage end` and `stage manual`: marks the
+ * stage done, sets its timing/artifact/source, and (on a revisit) back-fills
+ * the outgoing history entry's changeSummary. Does not touch the artifact
+ * file itself - whatever content is on disk (stub, Bob-written, or
+ * hand-written) is left exactly as is and simply registered as the stage's
+ * output. Caller is responsible for persisting the event.
+ */
+async function finishStage(
+  dir: string,
+  task: Task,
+  stageArg: StageId,
+  startedAt: string,
+  completedAt: string,
+  mode: RunMode,
+  source: "bob" | "manual",
+): Promise<{ durationSec: number; artifact: string }> {
   const record = task.stages[stageArg];
-  const mode = opts.mode ?? task.mode;
-  const now = new Date().toISOString();
-
-  let startedAt = record.startedAt;
-  if (record.status !== "running" || !startedAt) {
-    console.warn(
-      `warning: stage "${stageArg}" was never started - recording a best-effort 0s duration.`,
-    );
-    startedAt = now;
-  }
-
   const durationSec = Math.max(
     0,
-    Math.round((Date.parse(now) - Date.parse(startedAt)) / 1000),
+    Math.round((Date.parse(completedAt) - Date.parse(startedAt)) / 1000),
   );
   const artifact = STAGE_ARTIFACT[stageArg] ?? "";
 
   record.status = "done";
   record.startedAt = startedAt;
-  record.completedAt = now;
+  record.completedAt = completedAt;
   record.durationSec = durationSec;
   record.artifact = artifact || record.artifact;
+  record.source = source;
 
   // -----------------------------------------------------------------------
   // Revisit amend: if this is a revisit (visitCount > 1), back-fill the
@@ -300,7 +307,7 @@ export async function cmdStageEnd(
 
     const changeSummary = lastVisit.changeSummary ?? "(no artifact to diff)";
     await appendEvent({
-      ts: now,
+      ts: completedAt,
       task: task.id,
       mode,
       event: "stage_amended",
@@ -312,6 +319,37 @@ export async function cmdStageEnd(
   }
 
   await saveTask(path.join(dir, "task.json"), task);
+  return { durationSec, artifact };
+}
+
+export async function cmdStageEnd(
+  stageArg: string,
+  opts: StageOpts,
+): Promise<void> {
+  assertStage(stageArg);
+  const { dir, task } = await resolveActiveTask(opts.task);
+  const record = task.stages[stageArg];
+  const mode = opts.mode ?? task.mode;
+  const now = new Date().toISOString();
+
+  let startedAt = record.startedAt;
+  if (record.status !== "running" || !startedAt) {
+    console.warn(
+      `warning: stage "${stageArg}" was never started - recording a best-effort 0s duration.`,
+    );
+    startedAt = now;
+  }
+
+  const { durationSec, artifact } = await finishStage(
+    dir,
+    task,
+    stageArg,
+    startedAt,
+    now,
+    mode,
+    "bob",
+  );
+
   await appendEvent({
     ts: now,
     task: task.id,
@@ -322,6 +360,84 @@ export async function cmdStageEnd(
     artifact,
   });
   console.log(`${task.id}: ${stageArg} done in ${durationSec}s`);
+}
+
+/** Prompts on stdin for how many minutes a stage actually took, for the non-flag `stage manual` path. */
+async function promptMinutes(stageArg: StageId): Promise<number> {
+  const { createInterface } = await import("node:readline/promises");
+  const rl = createInterface({ input: process.stdin, output: process.stdout });
+  try {
+    const answer = await rl.question(
+      `No timing given for "${stageArg}" - how many minutes did it actually take? `,
+    );
+    const minutes = Number(answer.trim());
+    if (!Number.isFinite(minutes) || minutes < 0) {
+      throw new Error(`Invalid duration "${answer}" - expected a non-negative number of minutes.`);
+    }
+    return minutes;
+  } finally {
+    rl.close();
+  }
+}
+
+/**
+ * `relay stage manual <stage>` - for when a developer forgot to run
+ * `stage start` before working by hand. Performs exactly what `stage end`
+ * does (status done, computedDurationSec, completedAt, artifact filename,
+ * revisit amend), except `startedAt` is back-computed from `completedAt`
+ * minus the given/prompted duration rather than coming from a real prior
+ * `stage start`. Logs a `stage_manual` event instead of `stage_end` (see
+ * {@link StageManualEvent} in types.ts for why); everything that aggregates
+ * stage durations treats the two event types as equivalent.
+ */
+export async function cmdStageManual(
+  stageArg: string,
+  opts: StageManualOpts,
+): Promise<void> {
+  assertStage(stageArg);
+  const { dir, task } = await resolveActiveTask(opts.task);
+  const mode = opts.mode ?? task.mode;
+
+  const completedAt = opts.completedAt ?? new Date().toISOString();
+
+  let durationSec: number;
+  if (opts.startedAt) {
+    durationSec = Math.max(
+      0,
+      Math.round((Date.parse(completedAt) - Date.parse(opts.startedAt)) / 1000),
+    );
+  } else if (opts.minutes !== undefined) {
+    durationSec = Math.max(0, Math.round(opts.minutes * 60));
+  } else {
+    durationSec = Math.max(0, Math.round((await promptMinutes(stageArg)) * 60));
+  }
+
+  const startedAt =
+    opts.startedAt ?? new Date(Date.parse(completedAt) - durationSec * 1000).toISOString();
+
+  const { durationSec: finalDurationSec, artifact } = await finishStage(
+    dir,
+    task,
+    stageArg,
+    startedAt,
+    completedAt,
+    mode,
+    "manual",
+  );
+
+  await appendEvent({
+    ts: completedAt,
+    task: task.id,
+    mode,
+    event: "stage_manual",
+    stage: stageArg,
+    durationSec: finalDurationSec,
+    artifact,
+    source: "manual",
+  });
+  console.log(
+    `${task.id}: ${stageArg} recorded manually - ${finalDurationSec}s (${startedAt} -> ${completedAt})`,
+  );
 }
 
 export async function cmdStageSkip(

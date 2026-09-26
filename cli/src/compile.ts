@@ -1,18 +1,19 @@
-// `relay compile` - reads .relay/tasks/**, .relay/knowledge/**, and
-// .relay/metrics/events.jsonl, and writes dashboard/public/relay-data.json
+// `relay compile` - reads .bob/relay/tasks/**, .bob/relay/knowledge/**, and
+// .bob/relay/metrics/events.jsonl, and writes dashboard/public/relay-data.json
 // matching the RelayData shape in ./types.ts.
 import path from "node:path";
 import { watch } from "node:fs";
 import { readFile, stat } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { listDirs, readTask, writeJSON } from "./fsutil.js";
-import { loadConfig, dashboardDataPath, relayRoot, tasksDir } from "./paths.js";
+import { loadConfig, saveConfig, dashboardDataPath, relayRoot, tasksDir, type RelayConfig } from "./paths.js";
 import { readEvents } from "./events.js";
 import { readGotchasFile, parseGotchas } from "./knowledge.js";
 import {
   STAGES,
   SCHEMA_VERSION,
   type CompiledTask,
+  type EstimationMethod,
   type ImpactSummary,
   type RelayData,
   type RelayEvent,
@@ -40,7 +41,7 @@ async function readAllTasks(): Promise<CompiledTask[]> {
 }
 
 /**
- * The dashboard reads no raw `.relay/` files at runtime - a done stage's
+ * The dashboard reads no raw `.bob/relay/` files at runtime - a done stage's
  * markdown artifact has to travel inside the compiled snapshot itself
  * (`StageRecord.content`/`artifactMtime`), so this reads every stage's
  * artifact file off disk, embeds its content and mtime, and returns the
@@ -124,6 +125,95 @@ function attachSubagentLanes(tasks: Task[], events: RelayEvent[]): void {
   }
 }
 
+const DEFAULT_MIN_SAMPLE_SIZE = 3;
+const DEFAULT_FALLBACK_SEC = 21600;
+
+/** Wall-clock seconds actually spent on a task across every stage/visit (current + history). Null if the task has no timing data at all. */
+function totalTaskDurationSec(task: Task): number | null {
+  let total = 0;
+  let any = false;
+  for (const stage of STAGES) {
+    const rec = task.stages[stage];
+    if (!rec) continue;
+    if (rec.durationSec != null) {
+      total += rec.durationSec;
+      any = true;
+    }
+    for (const v of rec.history ?? []) {
+      if (v.durationSec != null) {
+        total += v.durationSec;
+        any = true;
+      }
+    }
+  }
+  return any ? total : null;
+}
+
+function isFullyCompleted(task: Task): boolean {
+  return STAGES.every((s) => {
+    const status = task.stages[s]?.status;
+    return status === "done" || status === "skipped";
+  });
+}
+
+/**
+ * Recomputes `estimation.averageTicketDurationSec` from completed real
+ * (relay-mode) tasks and writes it back to config.yml if it changed - the
+ * fallback tier `relay task estimate` (and the auto-estimate at `task new`
+ * time) reads from. Null until `minSampleSize` such tasks exist, per
+ * REQUIREMENT tier 2 - never present a too-small sample as a trustworthy
+ * average.
+ */
+async function updateAverageTicketDuration(
+  cfg: RelayConfig,
+  tasks: Task[],
+): Promise<RelayConfig> {
+  const minSampleSize = cfg.estimation?.minSampleSize ?? DEFAULT_MIN_SAMPLE_SIZE;
+  const defaultFallbackSec = cfg.estimation?.defaultFallbackSec ?? DEFAULT_FALLBACK_SEC;
+  const durations = tasks
+    .filter((t) => t.mode === "relay" && isFullyCompleted(t))
+    .map(totalTaskDurationSec)
+    .filter((d): d is number => d !== null);
+
+  const averageTicketDurationSec =
+    durations.length >= minSampleSize
+      ? Math.round(durations.reduce((a, b) => a + b, 0) / durations.length)
+      : null;
+
+  if (
+    cfg.estimation?.averageTicketDurationSec === averageTicketDurationSec &&
+    cfg.estimation?.minSampleSize === minSampleSize &&
+    cfg.estimation?.defaultFallbackSec === defaultFallbackSec
+  ) {
+    return cfg;
+  }
+  const updated: RelayConfig = {
+    ...cfg,
+    estimation: { averageTicketDurationSec, minSampleSize, defaultFallbackSec },
+  };
+  await saveConfig(updated);
+  return updated;
+}
+
+function computeEstimateAggregate(tasks: CompiledTask[]): {
+  estimatedTotalSec: number | null;
+  estimatedMethod: EstimationMethod | "mixed" | null;
+} {
+  const withEstimate = tasks
+    .map((t) => t.estimatedBaseline)
+    .filter((e): e is NonNullable<typeof e> => e != null);
+  if (withEstimate.length === 0) {
+    return { estimatedTotalSec: null, estimatedMethod: null };
+  }
+  const mean =
+    withEstimate.reduce((sum, e) => sum + e.totalSec, 0) / withEstimate.length;
+  const methods = new Set(withEstimate.map((e) => e.method));
+  return {
+    estimatedTotalSec: Math.round(mean),
+    estimatedMethod: methods.size === 1 ? [...methods][0] : "mixed",
+  };
+}
+
 function median(nums: number[]): number | null {
   if (nums.length === 0) return null;
   const sorted = [...nums].sort((a, b) => a - b);
@@ -144,7 +234,9 @@ function computeImpact(tasks: CompiledTask[], events: RelayEvent[]): ImpactSumma
         events
           .filter(
             (e) =>
-              e.event === "stage_end" && e.stage === stage && e.mode === mode,
+              (e.event === "stage_end" || e.event === "stage_manual") &&
+              e.stage === stage &&
+              e.mode === mode,
           )
           .map((e) => (e as { durationSec: number }).durationSec);
       return {
@@ -173,6 +265,7 @@ function computeImpact(tasks: CompiledTask[], events: RelayEvent[]): ImpactSumma
   // already excluded from every duration above; `excludedRuns` just makes
   // that count visible instead of silent.
   const excludedRuns = events.filter((e) => e.event === "stage_cancel").length;
+  const { estimatedTotalSec, estimatedMethod } = computeEstimateAggregate(tasks);
 
   return {
     perStage,
@@ -181,6 +274,8 @@ function computeImpact(tasks: CompiledTask[], events: RelayEvent[]): ImpactSumma
     criteriaCovered,
     criteriaTotal,
     excludedRuns,
+    estimatedTotalSec,
+    estimatedMethod,
   };
 }
 
@@ -188,8 +283,9 @@ export async function compileOnce(): Promise<{
   data: RelayData;
   outPath: string;
 }> {
-  const cfg = await loadConfig();
+  let cfg = await loadConfig();
   const tasks = await readAllTasks();
+  cfg = await updateAverageTicketDuration(cfg, tasks);
   const events = await readEvents();
   attachSubagentLanes(tasks, events);
   const gotchasText = await readGotchasFile();
@@ -215,7 +311,7 @@ export async function cmdCompile(opts: { watch?: boolean }): Promise<void> {
 
   if (!opts.watch) return;
 
-  console.log("Watching .relay/ for changes... (Ctrl+C to stop)");
+  console.log("Watching .bob/relay/ for changes... (Ctrl+C to stop)");
   let pending = false;
   const recompile = async () => {
     if (pending) return;

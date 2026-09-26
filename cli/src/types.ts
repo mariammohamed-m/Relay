@@ -1,6 +1,6 @@
 /**
  * Relay data contract - the single source of truth for everything the CLI
- * writes into `.relay/`, everything the dashboard reads back, and everything
+ * writes into `.bob/relay/`, everything the dashboard reads back, and everything
  * the Bob rules files instruct Bob to produce.
  *
  * Changing shapes here ripples into the CLI (Sprint 2), the dashboard
@@ -17,7 +17,7 @@
  * type can never drift apart.
  *
  * `docs` is the terminal stage - it fires after `pr` once the task's
- * knowledge has been harvested into `.relay/knowledge/`.
+ * knowledge has been harvested into `.bob/relay/knowledge/`.
  */
 export const STAGES = [
   "onboard",
@@ -116,7 +116,7 @@ export interface StageRecord {
   /**
    * Full Markdown body of `artifact`, embedded at compile time. The
    * dashboard is a pure reader of the compiled snapshot with no access to
-   * `.relay/` at runtime, so a stage's artifact text has to travel inside
+   * `.bob/relay/` at runtime, so a stage's artifact text has to travel inside
    * `RelayData` itself rather than being fetched separately. Null until the
    * stage completes, or for a stage with no artifact file (`artifact` is
    * also null in that case). Optional (rather than required-nullable like
@@ -127,7 +127,7 @@ export interface StageRecord {
   content?: string | null;
   /**
    * Subagents that ran during this stage, derived from paired
-   * `subagent_start`/`subagent_end` events in `.relay/metrics/events.jsonl`
+   * `subagent_start`/`subagent_end` events in `.bob/relay/metrics/events.jsonl`
    * and embedded at compile time for the same reason {@link content} is:
    * the dashboard reads only the compiled snapshot, never raw events.
    * Omitted (or empty) for a stage that ran no subagents.
@@ -151,6 +151,16 @@ export interface StageRecord {
    * access. Null until the stage has a real artifact file.
    */
   artifactMtime?: string | null;
+  /**
+   * Who completed this stage: `"bob"` when finished via `stage end`,
+   * `"manual"` when finished via `stage manual` (a developer worked by hand
+   * and back-filled the timing afterward). Null until the stage is done.
+   * Absent on task.json files written before this field existed -
+   * {@link readTask} defaults it to `"bob"` for already-done stages (the
+   * only way a stage could complete before `stage manual` existed) and
+   * `null` otherwise.
+   */
+  source?: "bob" | "manual" | null;
 }
 
 /** One subagent's timing within a single stage, compiled from paired events. */
@@ -275,10 +285,40 @@ export interface Task {
    * warning on the PR node.
    */
   conflictCheck?: ConflictCheck | null;
+  /**
+   * Estimated manual (no-Relay) completion time for this task, replacing the
+   * need for a real `--baseline` run to get a comparison. Populated
+   * immediately at `relay task new` time from the cheapest available tier
+   * (see {@link EstimatedBaseline.method}), then overwritten with a
+   * higher-fidelity tier as soon as one becomes available (e.g. the
+   * brief-stage AI estimate). Null/absent for baseline-mode tasks, which are
+   * themselves the real manual timer.
+   */
+  estimatedBaseline?: EstimatedBaseline | null;
+}
+
+/** Which tier produced an {@link EstimatedBaseline} - shown in the UI so a fallback average is never mistaken for a ticket-specific estimate. */
+export type EstimationMethod = "ai-estimated" | "historical-average" | "default-fallback";
+
+/**
+ * Estimated manual completion time for a task, used as the baseline Relay
+ * compares itself against when no real manual run exists. See AGENTS.md /
+ * the brief stage rules for how each tier is produced.
+ */
+export interface EstimatedBaseline {
+  /** Estimated total wall-clock seconds for a developer to complete this ticket without Relay/Bob. */
+  totalSec: number;
+  /** Optional rough split across stages, only as cheaply available as the method allows. */
+  perStage: Partial<Record<StageId, number>>;
+  method: EstimationMethod;
+  /** ISO 8601 timestamp of when this estimate was produced. */
+  estimatedAt: string;
+  /** Id of a past task this estimate was weighted against, when the `ai-estimated` tier found a strong match in `.bob/relay/knowledge/`. */
+  basedOnSimilarTask?: string;
 }
 
 // ---------------------------------------------------------------------------
-// Events (.relay/metrics/events.jsonl)
+// Events (.bob/relay/metrics/events.jsonl)
 // ---------------------------------------------------------------------------
 
 /**
@@ -307,6 +347,24 @@ export interface StageEndEvent extends BaseEvent {
   stage: StageId;
   durationSec: number;
   artifact: string;
+}
+
+/**
+ * A stage was completed via `relay stage manual` instead of a normal
+ * `stage start`/`stage end` pair - a developer worked by hand and
+ * back-filled how long it actually took. Kept as its own event type
+ * (rather than reusing `stage_end`) so the dashboard/report can tell a
+ * hand-timed entry apart from one Relay/Bob actually clocked; every reader
+ * that aggregates `stage_end` durations (compile.ts's impact summary,
+ * report.ts's comparisons) treats `stage_manual` as equivalent for duration
+ * purposes, since both carry the same `stage`/`durationSec`/`artifact` shape.
+ */
+export interface StageManualEvent extends BaseEvent {
+  event: "stage_manual";
+  stage: StageId;
+  durationSec: number;
+  artifact: string;
+  source: "manual";
 }
 
 export interface KnowledgeHarvestedEvent extends BaseEvent {
@@ -383,6 +441,7 @@ export interface StageAmendedEvent extends BaseEvent {
 export type RelayEvent =
   | StageStartEvent
   | StageEndEvent
+  | StageManualEvent
   | KnowledgeHarvestedEvent
   | SubagentStartEvent
   | SubagentEndEvent
@@ -394,7 +453,7 @@ export type RelayEvent =
   | StageAmendedEvent;
 
 // ---------------------------------------------------------------------------
-// Knowledge base (.relay/knowledge/)
+// Knowledge base (.bob/relay/knowledge/)
 // ---------------------------------------------------------------------------
 
 /**
@@ -469,6 +528,15 @@ export interface ImpactSummary {
   criteriaTotal: number;
   /** Count of cancelled/failed stage runs excluded from every duration above. */
   excludedRuns: number;
+  /**
+   * Mean of every task's `estimatedBaseline.totalSec`, or null if no task has
+   * one yet. Kept separate from `totalBaselineSec` (a real measured manual
+   * run) so the dashboard/report can never blend an estimate into an actual
+   * result - see {@link EstimatedBaseline}.
+   */
+  estimatedTotalSec: number | null;
+  /** The method backing `estimatedTotalSec`, or `"mixed"` when tasks used different tiers. Null when `estimatedTotalSec` is null. */
+  estimatedMethod: EstimationMethod | "mixed" | null;
 }
 
 /**

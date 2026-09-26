@@ -4,12 +4,10 @@
   "private": true,
   "description": "Relay - the baton that survives every handoff in a developer's workflow. IBM Bob 2.0 Hackathon submission.",
   "workspaces": [
-    "cli",
-    "dashboard"
+    "cli"
   ],
   "scripts": {
-    "build": "npm run build --workspace cli && node cli/dist/index.js compile && npm run build --workspace dashboard && node cli/scripts/copy-dashboard-dist.mjs",
-    "dev:dashboard": "npm run dev --workspace dashboard"
+    "build": "npm run build --workspace cli"
   },
   "license": "MIT"
 }

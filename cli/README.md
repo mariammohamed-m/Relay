@@ -2,8 +2,9 @@
 
 The CLI for Relay — carries structured context (the "baton") between the
 stages of a dev workflow: onboard, brief, plan, implement, debug, test,
-review, pr, docs. It scaffolds and manages the `.relay/` directory; nothing
-else needs a server or a database.
+review, pr, docs. It scaffolds and manages `.bob/relay/` (Relay's own
+subfolder inside your project's `.bob/` config); nothing else needs a server
+or a database.
 
 ## Install
 
@@ -17,10 +18,11 @@ npm install -g bob-relay
 relay start "Fix the login redirect bug"
 ```
 
-One command does everything: scaffolds `.relay/` and `.bob/` if this is a
-new project, creates and activates a task, compiles it, and opens the visual
-dashboard in your browser. The only thing left is opening the repo in Bob
-IDE and switching to the Relay Onboard mode.
+One command does everything: scaffolds `.bob/relay/` if this is a new
+project (leaving any pre-existing `.bob/` config untouched), creates and
+activates a task, compiles it, and opens the visual dashboard in your
+browser. The only thing left is opening the repo in Bob IDE and switching to
+the Relay Onboard mode.
 
 Flags: `--port <n>` picks the dashboard port, `--no-open` skips the browser
 tab, `--no-dashboard` skips compiling/serving entirely.
